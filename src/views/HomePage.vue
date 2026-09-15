@@ -991,37 +991,48 @@
                 </span>
               </div>
 
-              <!-- MENU -->
+              <!-- RECORD ACTION MENU -->
               <div class="menu-wrapper">
                 <button
+                  type="button"
                   class="menu-button"
-                  @click="toggleMenu(item.id)"
+                  aria-label="Record actions"
+                  @click.stop="openRecordMenu(item)"
                 >
                   <ion-icon :icon="ellipsisVertical"></ion-icon>
                 </button>
-
-                <div
-                  v-if="openedMenu === item.id"
-                  class="item-menu"
-                >
-                  <button @click="editItem(item)">
-                    <ion-icon :icon="createOutline"></ion-icon>
-                    Edit
-                  </button>
-
-                  <button
-                    class="delete-option"
-                    @click="deleteItemRecord(item.id)"
-                  >
-                    <ion-icon :icon="trashOutline"></ion-icon>
-                    Delete
-                  </button>
-                </div>
               </div>
             </article>
           </div>
         </section>
       </main>
+
+      <!-- RECORD ACTION SHEET -->
+      <div
+        v-if="selectedMenuItem"
+        class="record-action-overlay"
+        @click.self="closeRecordMenu"
+      >
+        <div class="record-action-sheet" role="dialog" aria-modal="true">
+          <div class="action-sheet-handle"></div>
+          <div class="action-sheet-title">
+            <strong>{{ selectedMenuItem.itemName }}</strong>
+            <span>Choose what you want to do with this record.</span>
+          </div>
+
+          <button type="button" class="record-action edit-action" @click="editSelectedRecord">
+            <span class="record-action-icon"><ion-icon :icon="createOutline"></ion-icon></span>
+            <span><strong>Edit Record</strong><small>Update the item information</small></span>
+          </button>
+
+          <button type="button" class="record-action delete-action" @click="deleteSelectedRecord">
+            <span class="record-action-icon"><ion-icon :icon="trashOutline"></ion-icon></span>
+            <span><strong>Delete Record</strong><small>Permanently remove this item</small></span>
+          </button>
+
+          <button type="button" class="record-action-cancel" @click="closeRecordMenu">Cancel</button>
+        </div>
+      </div>
 
       <!-- TOAST -->
       <ion-toast
@@ -1211,6 +1222,9 @@ const toastMessage =
 
 const openedMenu =
   ref('');
+
+const selectedMenuItem =
+  ref<LostFoundItem | null>(null);
 
 /* =========================================================
    NOTIFICATIONS
@@ -1923,16 +1937,29 @@ const deleteItemRecord =
   };
 
 /* =========================================================
-   MENU
+   RECORD ACTION MENU
 ========================================================= */
 
-const toggleMenu = (
-  id: string
-) => {
-  openedMenu.value =
-    openedMenu.value === id
-      ? ''
-      : id;
+const openRecordMenu = (item: LostFoundItem) => {
+  selectedMenuItem.value = item;
+};
+
+const closeRecordMenu = () => {
+  selectedMenuItem.value = null;
+};
+
+const editSelectedRecord = () => {
+  if (!selectedMenuItem.value) return;
+  const item = selectedMenuItem.value;
+  closeRecordMenu();
+  editItem(item);
+};
+
+const deleteSelectedRecord = async () => {
+  if (!selectedMenuItem.value) return;
+  const id = selectedMenuItem.value.id;
+  closeRecordMenu();
+  await deleteItemRecord(id);
 };
 
 /* =========================================================
@@ -4954,5 +4981,60 @@ ion-toolbar {
   .quick-card strong { font-size: 14px; }
   .quick-card small { font-size: 11px; }
 }
+
+
+/* =========================================================
+   FINAL READABILITY + RECORD ACTION SHEET
+========================================================= */
+.record-action-overlay {
+  position: fixed; inset: 0; z-index: 120000;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 18px 14px calc(18px + env(safe-area-inset-bottom));
+  background: rgba(9, 31, 60, 0.32); backdrop-filter: blur(3px);
+}
+.record-action-sheet {
+  width: min(100%, 520px); padding: 10px; border: 1px solid #dce8f3;
+  border-radius: 24px; background: #fff; box-shadow: 0 24px 70px rgba(16, 49, 85, .28);
+}
+.action-sheet-handle { width: 42px; height: 4px; margin: 2px auto 12px; border-radius: 99px; background: #d7e1eb; }
+.action-sheet-title { padding: 0 8px 10px; display: flex; flex-direction: column; gap: 3px; }
+.action-sheet-title strong { color: #102d59; font-size: 16px; font-weight: 900; }
+.action-sheet-title span { color: #7186a1; font-size: 11px; }
+.record-action { width: 100%; padding: 12px; border: 0; border-radius: 15px; display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: center; text-align: left; background: transparent; }
+.record-action + .record-action { margin-top: 3px; }
+.record-action-icon { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; font-size: 21px; }
+.edit-action .record-action-icon { color: #0b6edb; background: #e7f3ff; }
+.delete-action .record-action-icon { color: #d43b50; background: #ffe9ed; }
+.record-action > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.record-action strong { color: #18365f; font-size: 13px; font-weight: 900; }
+.record-action small { color: #7b8da5; font-size: 10px; }
+.delete-action strong { color: #c83248; }
+.record-action-cancel { width: 100%; margin-top: 7px; padding: 12px; border: 0; border-radius: 14px; color: #405d7d; background: #f1f6fa; font-size: 12px; font-weight: 850; }
+
+/* Slightly larger text without changing the layout proportions */
+.brand p, .form-header p { font-size: 11px; }
+.quick-card strong { font-size: 11px; }
+.quick-card small { font-size: 9px; }
+.search-box input, .records-search input { font-size: 11px; }
+.stat-card strong { font-size: 14px; }
+.stat-card small { font-size: 9px; }
+.section-title h2, .records-heading h2 { font-size: 16px; }
+.recent-title h3 { font-size: 12px; }
+.meta-information span { font-size: 9px; }
+.badge { font-size: 9px; }
+.record-main h3 { font-size: 13px; }
+.record-main span, .record-main p { font-size: 9px; }
+.filter-chip { font-size: 10px; }
+.menu-button { font-size: 17px; cursor: pointer; }
+.item-menu button { font-size: 10px; }
+.notification-copy strong { font-size: 11px; }
+.notification-copy > span { font-size: 10px; }
+.notification-copy small { font-size: 9px; }
+.field-label { font-size: 11px; }
+.form-input, .form-textarea { font-size: 11px; }
+.option-card strong { font-size: 11px; }
+.option-card small { font-size: 9px; }
+.step-label { font-size: 9px; }
+.nav-button span { font-size: 9px; }
 
 </style>
