@@ -63,6 +63,8 @@
           <button
             v-if="activeScreen === 'records'"
             class="header-icon-button"
+            aria-label="Open record filters"
+            @click.stop="toggleFilterPanel"
           >
             <ion-icon :icon="optionsOutline"></ion-icon>
           </button>
@@ -126,6 +128,43 @@
           ></span>
         </button>
       </div>
+    </div>
+
+    <!-- RECORD FILTER OVERLAY -->
+    <div v-if="filterPanelOpen" class="record-filter-panel" @click.stop>
+      <div class="filter-panel-header">
+        <div>
+          <h3>Filter Records</h3>
+          <p>Choose which reports you want to see.</p>
+        </div>
+        <button class="filter-close-button" @click="filterPanelOpen = false">×</button>
+      </div>
+
+      <div class="filter-panel-section">
+        <strong>Item Type / Status</strong>
+        <div class="filter-panel-grid">
+          <button
+            v-for="filter in filters"
+            :key="`panel-${filter}`"
+            :class="{ active: recordFilter === filter }"
+            @click="applyPanelFilter(filter)"
+          >
+            {{ filter }}
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-panel-section">
+        <strong>Sort by Date</strong>
+        <div class="filter-panel-grid two-column">
+          <button :class="{ active: dateSort === 'newest' }" @click="dateSort = 'newest'">Newest First</button>
+          <button :class="{ active: dateSort === 'oldest' }" @click="dateSort = 'oldest'">Oldest First</button>
+        </div>
+      </div>
+
+      <button class="apply-filter-button" @click="applyFiltersAndOpenRecords">
+        View {{ filteredItems.length }} {{ filteredItems.length === 1 ? 'Record' : 'Records' }}
+      </button>
     </div>
 
     <!-- ================= CONTENT ================= -->
@@ -228,7 +267,7 @@
               />
             </div>
 
-            <button class="filter-button" @click="goRecords">
+            <button class="filter-button" aria-label="Open filters" @click.stop="toggleFilterPanel">
               <ion-icon :icon="optionsOutline"></ion-icon>
             </button>
           </div>
@@ -1160,6 +1199,9 @@ const openedMenu =
 ========================================================= */
 
 const notificationsOpen = ref(false);
+const notificationTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+const filterPanelOpen = ref(false);
+const dateSort = ref<'newest' | 'oldest'>('newest');
 const readNotificationIds = ref<string[]>([]);
 
 const notifications = computed(() => {
@@ -1203,8 +1245,36 @@ const saveReadNotifications = () => {
   );
 };
 
+const clearNotificationTimer = () => {
+  if (notificationTimer.value) {
+    clearTimeout(notificationTimer.value);
+    notificationTimer.value = null;
+  }
+};
+
+const closeNotifications = (markRead = true) => {
+  clearNotificationTimer();
+  if (markRead && notificationsOpen.value) {
+    markAllAsRead();
+  }
+  notificationsOpen.value = false;
+};
+
+const startNotificationTimer = () => {
+  clearNotificationTimer();
+  notificationTimer.value = setTimeout(() => {
+    closeNotifications(true);
+  }, 3000);
+};
+
 const toggleNotifications = () => {
-  notificationsOpen.value = !notificationsOpen.value;
+  filterPanelOpen.value = false;
+  if (notificationsOpen.value) {
+    closeNotifications(true);
+    return;
+  }
+  notificationsOpen.value = true;
+  startNotificationTimer();
 };
 
 const markAllAsRead = () => {
@@ -1215,6 +1285,7 @@ const markAllAsRead = () => {
 };
 
 const openNotification = (id: string) => {
+  clearNotificationTimer();
   if (!readNotificationIds.value.includes(id)) {
     readNotificationIds.value.push(id);
     saveReadNotifications();
@@ -1222,6 +1293,26 @@ const openNotification = (id: string) => {
 
   notificationsOpen.value = false;
   activeScreen.value = 'records';
+};
+
+const toggleFilterPanel = () => {
+  closeNotifications(true);
+  filterPanelOpen.value = !filterPanelOpen.value;
+};
+
+const applyPanelFilter = (filter: string) => {
+  recordFilter.value = filter;
+};
+
+const applyFiltersAndOpenRecords = () => {
+  filterPanelOpen.value = false;
+  activeScreen.value = 'records';
+};
+
+const handleOutsideClick = () => {
+  if (notificationsOpen.value) closeNotifications(true);
+  if (filterPanelOpen.value) filterPanelOpen.value = false;
+  openedMenu.value = '';
 };
 
 /* =========================================================
@@ -1394,7 +1485,8 @@ const resetForm = () => {
 
 const goHome = () => {
   openedMenu.value = '';
-  notificationsOpen.value = false;
+  closeNotifications(true);
+  filterPanelOpen.value = false;
 
   activeScreen.value =
     'home';
@@ -1405,7 +1497,8 @@ const goHome = () => {
 
 const goRecords = () => {
   openedMenu.value = '';
-  notificationsOpen.value = false;
+  closeNotifications(true);
+  filterPanelOpen.value = false;
 
   activeScreen.value =
     'records';
@@ -1414,6 +1507,8 @@ const goRecords = () => {
 const openForm = (
   type?: 'Lost' | 'Found'
 ) => {
+  closeNotifications(true);
+  filterPanelOpen.value = false;
   resetForm();
 
   if (type) {
@@ -1866,7 +1961,7 @@ const filteredItems =
         .toLowerCase()
         .trim();
 
-    return items.value.filter(
+    const result = items.value.filter(
       (item) => {
         const matchesSearch =
           item.itemName
@@ -1896,6 +1991,12 @@ const filteredItems =
         );
       }
     );
+
+    return result.sort((a, b) => {
+      const aTime = new Date(`${a.date}T00:00:00`).getTime() || 0;
+      const bTime = new Date(`${b.date}T00:00:00`).getTime() || 0;
+      return dateSort.value === 'newest' ? bTime - aTime : aTime - bTime;
+    });
   });
 
 /* =========================================================
@@ -1981,9 +2082,12 @@ onMounted(() => {
   }
 
   loadItems();
+  document.addEventListener('click', handleOutsideClick);
 });
 
 onUnmounted(() => {
+  clearNotificationTimer();
+  document.removeEventListener('click', handleOutsideClick);
   clearPhotoPreviewUrl();
 });
 </script>
@@ -4680,4 +4784,82 @@ ion-toolbar {
       1fr;
   }
 }
+
+
+/* =========================================================
+   FINAL MOBILE READABILITY + FILTER PANEL
+========================================================= */
+.record-filter-panel {
+  position: fixed;
+  z-index: 3000;
+  top: 72px;
+  right: max(14px, calc((100vw - 720px) / 2 + 14px));
+  width: min(360px, calc(100vw - 28px));
+  padding: 16px;
+  border: 1px solid #dce9f4;
+  border-radius: 20px;
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 20px 50px rgba(34,73,112,.20);
+  backdrop-filter: blur(20px);
+}
+.filter-panel-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:15px; }
+.filter-panel-header h3 { margin:0; color:#102d5c; font-size:17px; font-weight:950; }
+.filter-panel-header p { margin:3px 0 0; color:#7186a2; font-size:11px; }
+.filter-close-button { width:32px; height:32px; border:0; border-radius:10px; color:#476687; background:#eef5fb; font-size:22px; line-height:1; }
+.filter-panel-section { margin-top:13px; }
+.filter-panel-section > strong { display:block; margin-bottom:8px; color:#17345e; font-size:12px; }
+.filter-panel-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.filter-panel-grid.two-column { grid-template-columns:1fr 1fr; }
+.filter-panel-grid button { min-height:38px; padding:7px 8px; border:1px solid #dce8f3; border-radius:11px; color:#315078; background:#f9fcff; font-size:10px; font-weight:800; }
+.filter-panel-grid button.active { border-color:#1474e6; color:#fff; background:linear-gradient(145deg,#318cf5,#0966e6); }
+.apply-filter-button { width:100%; min-height:43px; margin-top:16px; border:0; border-radius:13px; color:#fff; background:linear-gradient(135deg,#3a94f8,#0764e7); font-size:12px; font-weight:900; }
+
+/* Slightly larger text for real-phone readability */
+.brand p, .form-header p { font-size:12px; }
+.hero-content p { font-size:13px; }
+.quick-card strong { font-size:13px; }
+.quick-card small { font-size:10px; }
+.search-box input, .records-search input { font-size:13px; }
+.stat-card small { font-size:10px; }
+.section-header button { font-size:11px; }
+.recent-title h3 { font-size:13px; }
+.meta-information span { font-size:10px; }
+.badge { font-size:9px; }
+.records-header p { font-size:10px; }
+.filter-chips button { font-size:11px; }
+.record-main h3 { font-size:13px; }
+.record-main span, .record-main p { font-size:10px; }
+.step small { font-size:10px; }
+.photo-upload strong { font-size:14px; }
+.photo-upload > span { font-size:11px; }
+.photo-upload > p { font-size:10px; }
+.form-title p { font-size:10px; }
+.field label { font-size:12px; }
+.field ion-input, .field ion-textarea { font-size:13px; }
+.character-count { font-size:10px; }
+.choice-card strong { font-size:13px; }
+.choice-card small { font-size:10px; }
+.status-choice strong { font-size:11px; }
+.status-choice small { font-size:9px; }
+.primary-button, .secondary-button { font-size:12px; }
+.review-card > p { font-size:11px; }
+.review-information { font-size:10px; }
+.notification-panel-header h3 { font-size:17px; }
+.notification-panel-header p { font-size:10px; }
+.mark-read-button { font-size:9px; }
+.notification-copy strong { font-size:12px; }
+.notification-copy > span { font-size:10px; }
+.notification-copy small { font-size:9px; }
+.notification-empty strong { font-size:13px; }
+.notification-empty span { font-size:10px; }
+
+@media (max-width: 480px) {
+  .brand h1, .form-header h1 { font-size:18px; }
+  .hero-content h2 { font-size:26px; }
+  .hero-content p { font-size:12px; }
+  .quick-card strong { font-size:12px; }
+  .quick-card small { display:block; font-size:9px; }
+  .record-filter-panel { top:74px; right:10px; width:calc(100vw - 20px); }
+}
+
 </style>
