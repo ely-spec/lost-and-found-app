@@ -5037,4 +5037,185 @@ ion-toolbar {
 .step-label { font-size: 9px; }
 .nav-button span { font-size: 9px; }
 
+
+
+/* =========================================================
+   FINAL PHONE TYPOGRAPHY — optimized for real mobile screens
+   Kept at the very end so older small-font rules cannot override it.
+========================================================= */
+@media (max-width: 600px) {
+  .brand h1, .form-header h1 { font-size: 21px !important; line-height: 1.15; }
+  .brand p, .form-header p { font-size: 13px !important; line-height: 1.35; }
+
+  .hero-eyebrow { font-size: 11px !important; }
+  .hero-content h2 { font-size: 30px !important; line-height: 1.08; }
+  .hero-content p { font-size: 14px !important; line-height: 1.5; }
+
+  .quick-card strong { font-size: 14px !important; }
+  .quick-card small { font-size: 11px !important; line-height: 1.3; }
+
+  .search-box input, .records-search input { font-size: 14px !important; }
+
+  .stat-card strong { font-size: 20px !important; }
+  .stat-card small { font-size: 11px !important; line-height: 1.25; }
+
+  .section-header h2, .records-header h2,
+  .section-title h2, .records-heading h2 { font-size: 20px !important; }
+  .section-header button { font-size: 12px !important; }
+  .records-header p { font-size: 11px !important; }
+
+  .recent-title h3 { font-size: 15px !important; }
+  .meta-information span { font-size: 11px !important; }
+  .badge { font-size: 10px !important; padding: 6px 10px !important; }
+
+  .filter-chips button, .filter-chip { font-size: 12px !important; }
+  .record-main h3 { font-size: 16px !important; line-height: 1.25; }
+  .record-main span { font-size: 11px !important; line-height: 1.35; }
+  .record-main p { font-size: 11px !important; line-height: 1.45; }
+  .menu-button { font-size: 20px !important; }
+  .item-menu button { font-size: 12px !important; }
+
+  .step small, .step-label { font-size: 10px !important; }
+  .photo-upload strong { font-size: 16px !important; }
+  .photo-upload > span { font-size: 12px !important; }
+  .photo-upload > p { font-size: 10px !important; line-height: 1.35; }
+
+  .form-title h2 { font-size: 20px !important; }
+  .form-title p { font-size: 12px !important; }
+  .field label, .field-label { font-size: 14px !important; }
+  .field ion-input, .field ion-textarea,
+  .form-input, .form-textarea { font-size: 14px !important; }
+  .character-count { font-size: 10px !important; }
+
+  .choice-card strong, .option-card strong { font-size: 14px !important; }
+  .choice-card small, .option-card small { font-size: 11px !important; }
+  .status-choice strong { font-size: 13px !important; }
+  .status-choice small { font-size: 10px !important; line-height: 1.3; }
+
+  .primary-button, .secondary-button { font-size: 14px !important; }
+  .review-card h2 { font-size: 20px !important; }
+  .review-card > p { font-size: 12px !important; line-height: 1.5; }
+  .review-information { font-size: 11px !important; }
+
+  .notification-copy strong { font-size: 14px !important; }
+  .notification-copy > span { font-size: 12px !important; line-height: 1.4; }
+  .notification-copy small { font-size: 10px !important; }
+
+  .nav-button span { font-size: 11px !important; }
+
+  .action-sheet-title strong { font-size: 17px !important; }
+  .action-sheet-title span { font-size: 12px !important; }
+  .record-action strong { font-size: 14px !important; }
+  .record-action small { font-size: 11px !important; }
+  .record-action-cancel { font-size: 13px !important; }
+}
+
+
+/* =========================================================
+   EXTRA-LARGE MOBILE TYPOGRAPHY — final phone readability pass
+========================================================= */
+@media (max-width: 600px) {
+  .brand h1, .form-header h1 { font-size: 23px !important; }
+  .brand p, .form-header p { font-size: 14px !important; }
+  .hero-eyebrow { font-size: 12px !important; }
+  .hero-content h2 { font-size: 32px !important; }
+  .hero-content p { font-size: 15px !important; }
+  .quick-card strong { font-size: 15px !important; }
+  .quick-card small { font-size: 12px !important; }
+  .search-box input, .records-search input { font-size: 15px !important; }
+  .stat-card strong { font-size: 22px !important; }
+  .stat-card small { font-size: 12px !important; }
+  .section-header h2, .records-header h2, .section-title h2, .records-heading h2 { font-size: 22px !important; }
+  .section-header button { font-size: 13px !important; }
+  .records-header p { font-size: 12px !important; }
+  .recent-title h3 { font-size: 17px !important; }
+  .meta-information span { font-size: 12px !important; }
+  .badge { font-size: 11px !important; }
+  .filter-chips button, .filter-chip { font-size: 13px !important; }
+  .record-main h3 { font-size: 18px !important; }
+  .record-main span { font-size: 12px !important; }
+  .record-main p { font-size: 13px !important; }
+  .step small, .step-label { font-size: 11px !important; }
+  .photo-upload strong { font-size: 18px !important; }
+  .photo-upload > span { font-size: 13px !important; }
+  .photo-upload > p { font-size: 11px !important; }
+  .form-title h2 { font-size: 22px !important; }
+  .form-title p { font-size: 13px !important; }
+  .field label, .field-label { font-size: 15px !important; }
+  .field ion-input, .field ion-textarea, .form-input, .form-textarea { font-size: 16px !important; }
+  .character-count { font-size: 11px !important; }
+  .choice-card strong, .option-card strong { font-size: 16px !important; }
+  .choice-card small, .option-card small { font-size: 12px !important; }
+  .status-choice strong { font-size: 15px !important; }
+  .status-choice small { font-size: 11px !important; }
+  .primary-button, .secondary-button { font-size: 16px !important; }
+  .review-card h2 { font-size: 22px !important; }
+  .review-card > p { font-size: 14px !important; }
+  .review-information { font-size: 12px !important; }
+  .notification-copy strong { font-size: 15px !important; }
+  .notification-copy > span { font-size: 13px !important; }
+  .notification-copy small { font-size: 11px !important; }
+  .nav-button span { font-size: 12px !important; }
+  .action-sheet-title strong { font-size: 19px !important; }
+  .action-sheet-title span { font-size: 13px !important; }
+  .record-action strong { font-size: 16px !important; }
+  .record-action small { font-size: 12px !important; }
+  .record-action-cancel { font-size: 15px !important; }
+}
+
+
+
+/* =========================================================
+   XXL MOBILE TYPOGRAPHY — larger, comfortable phone sizing
+========================================================= */
+@media (max-width: 600px) {
+  .brand h1, .form-header h1 { font-size: 25px !important; line-height: 1.15 !important; }
+  .brand p, .form-header p { font-size: 16px !important; line-height: 1.35 !important; }
+  .hero-eyebrow { font-size: 14px !important; }
+  .hero-content h2 { font-size: 35px !important; line-height: 1.08 !important; }
+  .hero-content p { font-size: 17px !important; line-height: 1.45 !important; }
+  .quick-card strong { font-size: 17px !important; }
+  .quick-card small { font-size: 14px !important; line-height: 1.3 !important; }
+  .search-box input, .records-search input { font-size: 17px !important; }
+  .stat-card strong { font-size: 24px !important; }
+  .stat-card small { font-size: 14px !important; line-height: 1.25 !important; }
+  .section-header h2, .records-header h2, .section-title h2, .records-heading h2 { font-size: 24px !important; }
+  .section-header button { font-size: 15px !important; }
+  .records-header p { font-size: 14px !important; }
+  .recent-title h3 { font-size: 19px !important; }
+  .meta-information span { font-size: 14px !important; line-height: 1.35 !important; }
+  .badge { font-size: 13px !important; padding: 7px 11px !important; }
+  .filter-chips button, .filter-chip { font-size: 15px !important; }
+  .record-main h3 { font-size: 20px !important; line-height: 1.25 !important; }
+  .record-main span { font-size: 14px !important; line-height: 1.4 !important; }
+  .record-main p { font-size: 15px !important; line-height: 1.45 !important; }
+  .item-menu button { font-size: 15px !important; }
+  .step small, .step-label { font-size: 13px !important; }
+  .photo-upload strong { font-size: 20px !important; }
+  .photo-upload > span { font-size: 15px !important; }
+  .photo-upload > p { font-size: 13px !important; line-height: 1.35 !important; }
+  .form-title h2 { font-size: 24px !important; }
+  .form-title p { font-size: 15px !important; }
+  .field label, .field-label { font-size: 17px !important; }
+  .field ion-input, .field ion-textarea, .form-input, .form-textarea { font-size: 18px !important; }
+  .character-count { font-size: 13px !important; }
+  .choice-card strong, .option-card strong { font-size: 18px !important; }
+  .choice-card small, .option-card small { font-size: 14px !important; }
+  .status-choice strong { font-size: 17px !important; }
+  .status-choice small { font-size: 13px !important; line-height: 1.3 !important; }
+  .primary-button, .secondary-button { font-size: 18px !important; }
+  .review-card h2 { font-size: 24px !important; }
+  .review-card > p { font-size: 16px !important; line-height: 1.5 !important; }
+  .review-information { font-size: 14px !important; }
+  .notification-copy strong { font-size: 17px !important; }
+  .notification-copy > span { font-size: 15px !important; line-height: 1.4 !important; }
+  .notification-copy small { font-size: 13px !important; }
+  .nav-button span { font-size: 14px !important; }
+  .action-sheet-title strong { font-size: 21px !important; }
+  .action-sheet-title span { font-size: 15px !important; }
+  .record-action strong { font-size: 18px !important; }
+  .record-action small { font-size: 14px !important; }
+  .record-action-cancel { font-size: 17px !important; }
+}
+
 </style>
