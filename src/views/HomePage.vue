@@ -1,192 +1,35 @@
 <template>
   <ion-page>
-    <ion-header class="app-header">
+    <!-- ================= HEADER ================= -->
+    <ion-header class="app-header" :translucent="true">
       <ion-toolbar>
-        <ion-title>
-          <div class="brand-title">
-            <span class="brand-icon">⌁</span>
-            <span>Lost & Found</span>
-          </div>
-        </ion-title>
-      </ion-toolbar>
-    </ion-header>
+        <div class="header-content">
+          <div
+            v-if="activeScreen !== 'form'"
+            class="brand"
+            @click="goHome"
+          >
+            <div class="brand-logo">
+              <ion-icon :icon="cubeOutline"></ion-icon>
+            </div>
 
-    <ion-content :fullscreen="true">
-      <div class="app-container">
-
-        <!-- =========================
-             HOME SCREEN
-        ========================== -->
-        <section v-if="activeTab === 'home'" class="screen home-screen">
-          <div class="welcome-row">
             <div>
-              <p class="eyebrow">CAMPUS LOST & FOUND</p>
-              <h1>Find it. Report it.<br />Reunite it.</h1>
-              <p class="welcome-text">
-                Keep track of lost and found items in one simple place.
+              <h1>Lost & Found</h1>
+              <p v-if="activeScreen === 'home'">
+                Find it. Report it. Reunite it.
+              </p>
+              <p v-else>
+                All reported items in one place.
               </p>
             </div>
-
-            <div class="welcome-mark">
-              <span>⌕</span>
-            </div>
           </div>
 
-          <!-- HERO -->
-          <div class="hero-card">
-            <div class="hero-content">
-              <span class="hero-label">LOST SOMETHING?</span>
-              <h2>Help it find its way home.</h2>
-              <p>
-                Report lost or found items and keep every record organized.
-              </p>
-
-              <button class="hero-button" @click="openAddScreen">
-                <span>＋</span>
-                Report an Item
-              </button>
-            </div>
-
-            <div class="hero-decoration hero-circle-one"></div>
-            <div class="hero-decoration hero-circle-two"></div>
-          </div>
-
-          <!-- STATS -->
-          <div class="section-heading">
-            <div>
-              <h2>Overview</h2>
-              <p>Your current item records</p>
-            </div>
-
-            <button class="text-button" @click="loadItems">
-              Refresh
-            </button>
-          </div>
-
-          <div class="stats-grid">
-            <div class="stat-box total-stat">
-              <div class="stat-icon">▣</div>
-              <div>
-                <strong>{{ items.length }}</strong>
-                <span>Total Items</span>
-              </div>
-            </div>
-
-            <div class="stat-box lost-stat">
-              <div class="stat-icon">!</div>
-              <div>
-                <strong>{{ lostCount }}</strong>
-                <span>Lost</span>
-              </div>
-            </div>
-
-            <div class="stat-box found-stat">
-              <div class="stat-icon">⌕</div>
-              <div>
-                <strong>{{ foundCount }}</strong>
-                <span>Found</span>
-              </div>
-            </div>
-
-            <div class="stat-box claimed-stat">
-              <div class="stat-icon">✓</div>
-              <div>
-                <strong>{{ claimedCount }}</strong>
-                <span>Claimed</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- RECENT -->
-          <div class="section-heading recent-heading">
-            <div>
-              <h2>Recent Items</h2>
-              <p>Latest reports from your records</p>
-            </div>
-
-            <button class="text-button" @click="goToRecords">
-              See All
-            </button>
-          </div>
-
-          <div v-if="loading" class="home-loading">
-            <ion-spinner name="crescent"></ion-spinner>
-            <span>Loading items...</span>
-          </div>
-
-          <div v-else-if="recentItems.length === 0" class="empty-home">
-            <div class="empty-icon">⌕</div>
-            <h3>No items yet</h3>
-            <p>Your recently reported items will appear here.</p>
-
-            <button class="secondary-action" @click="openAddScreen">
-              Report First Item
-            </button>
-          </div>
-
-          <div v-else class="recent-list">
-            <div
-              v-for="item in recentItems"
-              :key="item.id"
-              class="recent-card"
-              @click="viewRecord(item)"
-            >
-              <div
-                class="recent-symbol"
-                :class="item.type === 'Lost' ? 'lost-symbol' : 'found-symbol'"
-              >
-                {{ item.type === 'Lost' ? '!' : '✓' }}
-              </div>
-
-              <div class="recent-info">
-                <h3>{{ item.itemName }}</h3>
-
-                <div class="mini-badges">
-                  <span
-                    class="badge"
-                    :class="item.type === 'Lost' ? 'lost-badge' : 'found-badge'"
-                  >
-                    {{ item.type }}
-                  </span>
-
-                  <span
-                    class="badge"
-                    :class="
-                      item.status === 'Claimed'
-                        ? 'claimed-badge'
-                        : 'unclaimed-badge'
-                    "
-                  >
-                    {{ item.status }}
-                  </span>
-                </div>
-
-                <p>⌖ {{ item.location }}</p>
-              </div>
-
-              <span class="chevron">›</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- =========================
-             ADD / EDIT SCREEN
-        ========================== -->
-        <section v-if="activeTab === 'add'" class="screen">
-          <div class="screen-title">
-            <button
-              v-if="isEditing"
-              class="back-button"
-              @click="cancelEdit"
-            >
-              ‹
+          <div v-else class="form-header">
+            <button class="back-button" @click="goHome">
+              <ion-icon :icon="arrowBackOutline"></ion-icon>
             </button>
 
             <div>
-              <p class="eyebrow">
-                {{ isEditing ? 'UPDATE RECORD' : 'NEW REPORT' }}
-              </p>
-
               <h1>
                 {{ isEditing ? 'Edit Item' : 'Report an Item' }}
               </h1>
@@ -194,16 +37,455 @@
               <p>
                 {{
                   isEditing
-                    ? 'Update the information for this item.'
-                    : 'Provide the details of the lost or found item.'
+                    ? 'Update the information below.'
+                    : 'Help reunite lost items with their owners.'
                 }}
               </p>
             </div>
           </div>
 
+          <div v-if="activeScreen === 'home'" class="notification-wrapper">
+            <button
+              class="header-icon-button"
+              aria-label="Open notifications"
+              @click.stop="toggleNotifications"
+            >
+              <ion-icon :icon="notificationsOutline"></ion-icon>
+              <span v-if="unreadCount > 0" class="notification-dot"></span>
+              <span v-if="unreadCount > 0" class="notification-count">
+                {{ unreadCount > 9 ? '9+' : unreadCount }}
+              </span>
+            </button>
+
+
+          </div>
+
+          <button
+            v-if="activeScreen === 'records'"
+            class="header-icon-button"
+          >
+            <ion-icon :icon="optionsOutline"></ion-icon>
+          </button>
+        </div>
+      </ion-toolbar>
+    </ion-header>
+
+    <!-- NOTIFICATION OVERLAY: outside ion-header so Ionic cannot clip it -->
+    <div v-if="notificationsOpen" class="notification-panel" @click.stop>
+      <div class="notification-panel-header">
+        <div>
+          <h3>Notifications</h3>
+          <p>{{ unreadCount }} unread</p>
+        </div>
+
+        <button
+          v-if="unreadCount > 0"
+          class="mark-read-button"
+          @click="markAllAsRead"
+        >
+          Mark all as read
+        </button>
+      </div>
+
+      <div v-if="notifications.length === 0" class="notification-empty">
+        <ion-icon :icon="notificationsOutline"></ion-icon>
+        <strong>No notifications yet</strong>
+        <span>New reports and claimed items will appear here.</span>
+      </div>
+
+      <div v-else class="notification-list">
+        <button
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="notification-item"
+          :class="{ unread: !isNotificationRead(notification.id) }"
+          @click="openNotification(notification.id)"
+        >
+          <span
+            class="notification-item-icon"
+            :class="notification.kind"
+          >
+            <ion-icon
+              :icon="notification.kind === 'claimed'
+                ? checkmarkCircleOutline
+                : notification.kind === 'found'
+                ? searchCircleOutline
+                : alertCircleOutline"
+            ></ion-icon>
+          </span>
+
+          <span class="notification-copy">
+            <strong>{{ notification.title }}</strong>
+            <span>{{ notification.message }}</span>
+            <small>{{ notification.dateLabel }}</small>
+          </span>
+
+          <span
+            v-if="!isNotificationRead(notification.id)"
+            class="unread-dot"
+          ></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= CONTENT ================= -->
+    <ion-content :fullscreen="true">
+      <main class="app-container">
+
+        <!-- ================================================= -->
+        <!-- HOME SCREEN -->
+        <!-- ================================================= -->
+
+        <section
+          v-if="activeScreen === 'home'"
+          class="screen home-screen"
+        >
+          <!-- HERO -->
+          <div class="hero-card">
+            <div class="hero-circle circle-one"></div>
+            <div class="hero-circle circle-two"></div>
+
+            <div class="hero-content">
+              <span class="hero-eyebrow">
+                CAMPUS LOST & FOUND
+              </span>
+
+              <h2>
+                Lost something?<br />
+                Let's bring it back together.
+              </h2>
+
+              <p>
+                Report lost or found items and help our community.
+              </p>
+            </div>
+
+            <!-- ILLUSTRATION -->
+            <div class="hero-visual">
+              <div class="location-pin">
+                <ion-icon :icon="location"></ion-icon>
+              </div>
+
+              <div class="student">
+                <div class="student-head">
+                  <div class="hair"></div>
+
+                  <div class="face">
+                    <span class="eye left-eye"></span>
+                    <span class="eye right-eye"></span>
+                    <span class="smile"></span>
+                  </div>
+                </div>
+
+                <div class="student-body">
+                  <div class="hood"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="quick-actions">
+              <button
+                class="quick-card"
+                @click="openForm('Lost')"
+              >
+                <span class="quick-icon lost-action">
+                  <ion-icon :icon="searchOutline"></ion-icon>
+                </span>
+
+                <span>
+                  <strong>Report Lost</strong>
+                  <small>I lost an item</small>
+                </span>
+              </button>
+
+              <button
+                class="quick-card"
+                @click="openForm('Found')"
+              >
+                <span class="quick-icon found-action">
+                  <ion-icon :icon="paperPlaneOutline"></ion-icon>
+                </span>
+
+                <span>
+                  <strong>Report Found</strong>
+                  <small>I found an item</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- SEARCH -->
+          <div class="home-search-row">
+            <div class="search-box">
+              <ion-icon :icon="searchOutline"></ion-icon>
+
+              <input
+                v-model="searchText"
+                type="text"
+                placeholder="Search items, locations, or keywords..."
+                @keyup.enter="searchFromHome"
+              />
+            </div>
+
+            <button class="filter-button" @click="goRecords">
+              <ion-icon :icon="optionsOutline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- STATISTICS -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon total-icon">
+                <ion-icon :icon="cubeOutline"></ion-icon>
+              </div>
+
+              <strong>{{ items.length }}</strong>
+              <small>Total Items</small>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon lost-icon">
+                <ion-icon :icon="alertCircleOutline"></ion-icon>
+              </div>
+
+              <strong>{{ lostCount }}</strong>
+              <small>Lost Items</small>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon found-icon">
+                <ion-icon :icon="searchCircleOutline"></ion-icon>
+              </div>
+
+              <strong>{{ foundCount }}</strong>
+              <small>Found Items</small>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon claimed-icon">
+                <ion-icon :icon="checkmarkCircle"></ion-icon>
+              </div>
+
+              <strong>{{ claimedCount }}</strong>
+              <small>Claimed</small>
+            </div>
+          </div>
+
+          <!-- RECENT -->
+          <div class="section-header">
+            <h2>Recent Reports</h2>
+
+            <button @click="goRecords">
+              See All
+              <ion-icon :icon="arrowForwardOutline"></ion-icon>
+            </button>
+          </div>
+
+          <div v-if="loading" class="state-card">
+            <ion-spinner name="crescent"></ion-spinner>
+            <p>Loading reports...</p>
+          </div>
+
+          <div
+            v-else-if="recentItems.length === 0"
+            class="state-card"
+          >
+            <div class="state-icon">
+              <ion-icon :icon="fileTrayOutline"></ion-icon>
+            </div>
+
+            <h3>No reports yet</h3>
+
+            <p>
+              Your latest lost and found reports will appear here.
+            </p>
+
+            <button
+              class="small-primary-button"
+              @click="openForm('Lost')"
+            >
+              Report an Item
+            </button>
+          </div>
+
+          <div v-else class="recent-list">
+            <article
+              v-for="item in recentItems"
+              :key="item.id"
+              class="recent-item"
+            >
+              <div
+                class="item-thumbnail"
+                :class="
+                  item.type === 'Lost'
+                    ? 'lost-thumbnail'
+                    : 'found-thumbnail'
+                "
+              >
+                <ion-icon
+                  :icon="getItemIcon(item.itemName)"
+                ></ion-icon>
+              </div>
+
+              <div class="recent-information">
+                <div class="recent-title">
+                  <h3>{{ item.itemName }}</h3>
+
+                  <span
+                    class="badge"
+                    :class="
+                      item.type === 'Lost'
+                        ? 'lost-badge'
+                        : 'found-badge'
+                    "
+                  >
+                    {{ item.type }}
+                  </span>
+                </div>
+
+                <div class="meta-information">
+                  <span>
+                    <ion-icon :icon="locationOutline"></ion-icon>
+                    {{ item.location }}
+                  </span>
+
+                  <span>
+                    <ion-icon :icon="calendarOutline"></ion-icon>
+                    {{ formatDate(item.date) }}
+                  </span>
+                </div>
+              </div>
+
+              <span
+                class="badge"
+                :class="
+                  item.status === 'Claimed'
+                    ? 'claimed-badge'
+                    : 'unclaimed-badge'
+                "
+              >
+                {{ item.status }}
+              </span>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================================================= -->
+        <!-- ADD / EDIT FORM SCREEN -->
+        <!-- ================================================= -->
+
+        <section
+          v-if="activeScreen === 'form'"
+          class="screen form-screen"
+        >
+          <!-- STEP INDICATOR -->
+          <div class="stepper">
+            <div
+              v-for="step in 3"
+              :key="step"
+              class="step"
+              :class="{ active: currentStep >= step }"
+            >
+              <div class="step-number">
+                <ion-icon
+                  v-if="currentStep > step"
+                  :icon="checkmark"
+                ></ion-icon>
+
+                <template v-else>
+                  {{ step }}
+                </template>
+              </div>
+
+              <small>
+                {{
+                  step === 1
+                    ? 'Details'
+                    : step === 2
+                    ? 'Location & Date'
+                    : 'Review'
+                }}
+              </small>
+            </div>
+          </div>
+
           <div class="form-card">
-            <form @submit.prevent="saveItem">
-              <div class="form-group">
+
+            <!-- ================= STEP 1 ================= -->
+            <div v-if="currentStep === 1">
+
+              <!-- WORKING PHOTO PICKER -->
+              <div
+                class="photo-upload"
+                :class="{ 'has-photo': photoPreview }"
+                @click="openPhotoPicker"
+              >
+                <input
+                  ref="photoInput"
+                  class="photo-input"
+                  type="file"
+                  accept="image/*"
+                  @change="handlePhotoSelected"
+                />
+
+                <!-- NO PHOTO -->
+                <template v-if="!photoPreview">
+                  <div class="camera-icon">
+                    <ion-icon :icon="cameraOutline"></ion-icon>
+                  </div>
+
+                  <strong>Add a Photo</strong>
+
+                  <span>
+                    Tap to choose from Photos or Files
+                  </span>
+
+                  <p>
+                    JPG, PNG or other image formats • Max 5 MB
+                  </p>
+                </template>
+
+                <!-- PHOTO PREVIEW -->
+                <template v-else>
+                  <img
+                    :src="photoPreview"
+                    class="photo-preview"
+                    alt="Selected item"
+                  />
+
+                  <div class="photo-overlay">
+                    <ion-icon :icon="cameraOutline"></ion-icon>
+                    <span>Change Photo</span>
+                  </div>
+                </template>
+              </div>
+
+              <!-- REMOVE PHOTO -->
+              <button
+                v-if="photoPreview"
+                type="button"
+                class="remove-photo-button"
+                @click.stop="removePhoto"
+              >
+                <ion-icon :icon="trashOutline"></ion-icon>
+                Remove Photo
+              </button>
+
+              <!-- ITEM DETAILS TITLE -->
+              <div class="form-title">
+                <div class="form-title-icon">
+                  <ion-icon :icon="documentTextOutline"></ion-icon>
+                </div>
+
+                <div>
+                  <h2>Item Details</h2>
+                  <p>Tell us about the item.</p>
+                </div>
+              </div>
+
+              <!-- ITEM NAME -->
+              <div class="field">
                 <label>
                   Item Name
                   <span>*</span>
@@ -211,13 +493,13 @@
 
                 <ion-input
                   v-model="form.itemName"
-                  placeholder="Example: Black Wallet"
                   fill="outline"
-                  required
+                  placeholder="e.g. Black Wallet"
                 ></ion-input>
               </div>
 
-              <div class="form-group">
+              <!-- DESCRIPTION -->
+              <div class="field">
                 <label>
                   Description
                   <span>*</span>
@@ -225,318 +507,523 @@
 
                 <ion-textarea
                   v-model="form.description"
-                  placeholder="Describe the item in detail..."
                   fill="outline"
+                  placeholder="Color, brand, unique details..."
                   :auto-grow="true"
-                  :rows="4"
-                  required
+                  :maxlength="200"
                 ></ion-textarea>
+
+                <small class="character-count">
+                  {{ form.description.length }}/200
+                </small>
               </div>
 
-              <div class="form-group">
+              <!-- LOST / FOUND -->
+              <div class="field">
                 <label>
-                  Location Found / Lost
+                  Type of Item
                   <span>*</span>
                 </label>
 
-                <ion-input
-                  v-model="form.location"
-                  placeholder="Example: School Library"
-                  fill="outline"
-                  required
-                ></ion-input>
+                <div class="choice-grid">
+                  <button
+                    type="button"
+                    class="choice-card"
+                    :class="{
+                      'lost-selected': form.type === 'Lost'
+                    }"
+                    @click="form.type = 'Lost'"
+                  >
+                    <ion-icon :icon="sadOutline"></ion-icon>
+
+                    <strong>Lost</strong>
+                    <small>I lost this item</small>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="choice-card"
+                    :class="{
+                      'found-selected': form.type === 'Found'
+                    }"
+                    @click="form.type = 'Found'"
+                  >
+                    <ion-icon :icon="happyOutline"></ion-icon>
+
+                    <strong>Found</strong>
+                    <small>I found this item</small>
+                  </button>
+                </div>
               </div>
 
-              <div class="form-group">
+              <!-- STATUS -->
+              <div class="field">
+                <label>
+                  Item Status
+                  <span>*</span>
+                </label>
+
+                <div class="choice-grid">
+                  <button
+                    type="button"
+                    class="status-choice"
+                    :class="{
+                      'unclaimed-selected':
+                        form.status === 'Unclaimed'
+                    }"
+                    @click="form.status = 'Unclaimed'"
+                  >
+                    <ion-icon :icon="lockClosedOutline"></ion-icon>
+
+                    <div>
+                      <strong>Unclaimed</strong>
+                      <small>Still looking for owner</small>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="status-choice"
+                    :class="{
+                      'claimed-selected':
+                        form.status === 'Claimed'
+                    }"
+                    @click="form.status = 'Claimed'"
+                  >
+                    <ion-icon
+                      :icon="checkmarkCircleOutline"
+                    ></ion-icon>
+
+                    <div>
+                      <strong>Claimed</strong>
+                      <small>Already returned</small>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                class="primary-button"
+                @click="nextStep"
+              >
+                Next
+                <ion-icon :icon="arrowForwardOutline"></ion-icon>
+              </button>
+            </div>
+
+            <!-- ================= STEP 2 ================= -->
+            <div v-if="currentStep === 2">
+              <div class="form-title">
+                <div class="form-title-icon">
+                  <ion-icon :icon="locationOutline"></ion-icon>
+                </div>
+
+                <div>
+                  <h2>Location & Date</h2>
+
+                  <p>
+                    Where and when was the item lost or found?
+                  </p>
+                </div>
+              </div>
+
+              <!-- LOCATION -->
+              <div class="field">
+                <label>
+                  Location
+                  <span>*</span>
+                </label>
+
+                <div class="custom-input">
+                  <ion-icon :icon="locationOutline"></ion-icon>
+
+                  <ion-input
+                    v-model="form.location"
+                    placeholder="e.g. School Library"
+                  ></ion-input>
+                </div>
+              </div>
+
+              <!-- DATE -->
+              <div class="field">
                 <label>
                   Date
                   <span>*</span>
                 </label>
 
-                <ion-input
-                  v-model="form.date"
-                  type="date"
-                  fill="outline"
-                  required
-                ></ion-input>
-              </div>
+                <div class="custom-input">
+                  <ion-icon :icon="calendarOutline"></ion-icon>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Type</label>
-
-                  <ion-select
-                    v-model="form.type"
-                    fill="outline"
-                    interface="popover"
-                  >
-                    <ion-select-option value="Lost">
-                      Lost
-                    </ion-select-option>
-
-                    <ion-select-option value="Found">
-                      Found
-                    </ion-select-option>
-                  </ion-select>
-                </div>
-
-                <div class="form-group">
-                  <label>Status</label>
-
-                  <ion-select
-                    v-model="form.status"
-                    fill="outline"
-                    interface="popover"
-                  >
-                    <ion-select-option value="Unclaimed">
-                      Unclaimed
-                    </ion-select-option>
-
-                    <ion-select-option value="Claimed">
-                      Claimed
-                    </ion-select-option>
-                  </ion-select>
+                  <ion-input
+                    v-model="form.date"
+                    type="date"
+                  ></ion-input>
                 </div>
               </div>
 
-              <button
-                class="save-button"
-                type="submit"
-                :disabled="loading"
-              >
-                <ion-spinner
-                  v-if="loading"
-                  name="crescent"
-                ></ion-spinner>
+              <div class="navigation-buttons">
+                <button
+                  class="secondary-button"
+                  @click="currentStep = 1"
+                >
+                  <ion-icon :icon="arrowBackOutline"></ion-icon>
+                  Back
+                </button>
 
-                <template v-else>
-                  <span>{{ isEditing ? '✓' : '＋' }}</span>
-                  {{ isEditing ? 'Update Item' : 'Save Item' }}
-                </template>
-              </button>
+                <button
+                  class="primary-button"
+                  @click="nextStep"
+                >
+                  Review
+                  <ion-icon :icon="arrowForwardOutline"></ion-icon>
+                </button>
+              </div>
+            </div>
 
-              <button
-                v-if="isEditing"
-                class="cancel-button"
-                type="button"
-                @click="cancelEdit"
-              >
-                Cancel Editing
-              </button>
-            </form>
+            <!-- ================= STEP 3 ================= -->
+            <div v-if="currentStep === 3">
+              <div class="form-title">
+                <div class="form-title-icon">
+                  <ion-icon
+                    :icon="checkmarkCircleOutline"
+                  ></ion-icon>
+                </div>
+
+                <div>
+                  <h2>Review Report</h2>
+                  <p>Check your report before submitting.</p>
+                </div>
+              </div>
+
+              <div class="review-card">
+
+                <!-- REVIEW PHOTO -->
+                <img
+                  v-if="photoPreview"
+                  :src="photoPreview"
+                  class="review-photo"
+                  alt="Item preview"
+                />
+
+                <div
+                  v-else
+                  class="review-placeholder"
+                >
+                  <ion-icon
+                    :icon="getItemIcon(form.itemName)"
+                  ></ion-icon>
+                </div>
+
+                <h2>{{ form.itemName }}</h2>
+
+                <div class="review-badges">
+                  <span
+                    class="badge"
+                    :class="
+                      form.type === 'Lost'
+                        ? 'lost-badge'
+                        : 'found-badge'
+                    "
+                  >
+                    {{ form.type }}
+                  </span>
+
+                  <span
+                    class="badge"
+                    :class="
+                      form.status === 'Claimed'
+                        ? 'claimed-badge'
+                        : 'unclaimed-badge'
+                    "
+                  >
+                    {{ form.status }}
+                  </span>
+                </div>
+
+                <p>{{ form.description }}</p>
+
+                <div class="review-information">
+                  <span>
+                    <ion-icon :icon="locationOutline"></ion-icon>
+                    {{ form.location }}
+                  </span>
+
+                  <span>
+                    <ion-icon :icon="calendarOutline"></ion-icon>
+                    {{ formatDate(form.date) }}
+                  </span>
+
+                  <span v-if="selectedPhoto">
+                    <ion-icon :icon="cameraOutline"></ion-icon>
+                    {{ selectedPhoto.name }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="navigation-buttons">
+                <button
+                  class="secondary-button"
+                  @click="currentStep = 2"
+                >
+                  <ion-icon :icon="arrowBackOutline"></ion-icon>
+                  Back
+                </button>
+
+                <button
+                  class="primary-button"
+                  :disabled="loading"
+                  @click="saveItem"
+                >
+                  <ion-spinner
+                    v-if="loading"
+                    name="crescent"
+                  ></ion-spinner>
+
+                  <template v-else>
+                    <ion-icon
+                      :icon="
+                        isEditing
+                          ? saveOutline
+                          : checkmarkCircleOutline
+                      "
+                    ></ion-icon>
+
+                    {{
+                      isEditing
+                        ? 'Update Item'
+                        : 'Submit Report'
+                    }}
+                  </template>
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- =========================
-             RECORDS SCREEN
-        ========================== -->
-        <section v-if="activeTab === 'records'" class="screen">
-          <div class="records-title">
-            <div>
-              <p class="eyebrow">MANAGE ITEMS</p>
-              <h1>Item Records</h1>
-              <p>Search, filter, update, or remove saved items.</p>
-            </div>
+        <!-- ================================================= -->
+        <!-- RECORDS SCREEN -->
+        <!-- ================================================= -->
 
+        <section
+          v-if="activeScreen === 'records'"
+          class="screen records-screen"
+        >
+          <div class="records-search">
+            <ion-icon :icon="searchOutline"></ion-icon>
+
+            <input
+              v-model="searchText"
+              type="text"
+              placeholder="Search items, locations, or keywords..."
+            />
+          </div>
+
+          <!-- FILTERS -->
+          <div class="filter-chips">
             <button
-              class="refresh-icon-button"
-              @click="loadItems"
-              aria-label="Refresh records"
+              v-for="filter in filters"
+              :key="filter"
+              :class="{ active: recordFilter === filter }"
+              @click="recordFilter = filter"
             >
-              ↻
+              {{ filter }}
             </button>
           </div>
 
-          <div class="records-tools">
-            <ion-searchbar
-              v-model="searchText"
-              placeholder="Search item or location..."
-            ></ion-searchbar>
+          <!-- RECORDS HEADER -->
+          <div class="records-header">
+            <div>
+              <h2>Item Records</h2>
 
-            <div class="filter-tabs">
-              <button
-                :class="{ active: recordFilter === 'All' }"
-                @click="recordFilter = 'All'"
-              >
-                All
-              </button>
-
-              <button
-                :class="{ active: recordFilter === 'Lost' }"
-                @click="recordFilter = 'Lost'"
-              >
-                Lost
-              </button>
-
-              <button
-                :class="{ active: recordFilter === 'Found' }"
-                @click="recordFilter = 'Found'"
-              >
-                Found
-              </button>
-
-              <button
-                :class="{ active: recordFilter === 'Claimed' }"
-                @click="recordFilter = 'Claimed'"
-              >
-                Claimed
-              </button>
+              <p>
+                {{ filteredItems.length }}
+                {{
+                  filteredItems.length === 1
+                    ? 'record'
+                    : 'records'
+                }}
+              </p>
             </div>
+
+            <button
+              class="refresh-button"
+              @click="loadItems"
+            >
+              <ion-icon :icon="refreshOutline"></ion-icon>
+            </button>
           </div>
 
-          <div v-if="loading" class="empty-state">
+          <!-- LOADING -->
+          <div v-if="loading" class="state-card">
             <ion-spinner name="crescent"></ion-spinner>
             <p>Loading records...</p>
           </div>
 
+          <!-- EMPTY -->
           <div
             v-else-if="filteredItems.length === 0"
-            class="empty-state"
+            class="state-card"
           >
-            <div class="empty-icon">⌕</div>
-            <h3>No records found</h3>
-            <p>Try another search or report a new item.</p>
+            <div class="state-icon">
+              <ion-icon :icon="searchOutline"></ion-icon>
+            </div>
 
-            <button class="secondary-action" @click="openAddScreen">
-              ＋ Report Item
-            </button>
+            <h3>No items found</h3>
+
+            <p>
+              Try changing your search or report a new item.
+            </p>
           </div>
 
+          <!-- RECORD LIST -->
           <div v-else class="records-list">
             <article
               v-for="item in filteredItems"
               :key="item.id"
               class="record-card"
             >
-              <div class="record-main">
-                <div
-                  class="record-symbol"
-                  :class="
-                    item.type === 'Lost'
-                      ? 'lost-record-symbol'
-                      : 'found-record-symbol'
-                  "
-                >
-                  {{ item.type === 'Lost' ? '!' : '✓' }}
-                </div>
-
-                <div class="record-content">
-                  <div class="record-heading">
-                    <h3>{{ item.itemName }}</h3>
-                    <span class="date">{{ formatDate(item.date) }}</span>
-                  </div>
-
-                  <div class="badge-row">
-                    <span
-                      class="badge"
-                      :class="
-                        item.type === 'Lost'
-                          ? 'lost-badge'
-                          : 'found-badge'
-                      "
-                    >
-                      {{ item.type }}
-                    </span>
-
-                    <span
-                      class="badge"
-                      :class="
-                        item.status === 'Claimed'
-                          ? 'claimed-badge'
-                          : 'unclaimed-badge'
-                      "
-                    >
-                      {{ item.status }}
-                    </span>
-                  </div>
-
-                  <p class="record-description">
-                    {{ item.description }}
-                  </p>
-
-                  <div class="record-location">
-                    <span>⌖</span>
-                    <span>{{ item.location }}</span>
-                  </div>
-                </div>
+              <div
+                class="record-thumbnail"
+                :class="
+                  item.type === 'Lost'
+                    ? 'lost-thumbnail'
+                    : 'found-thumbnail'
+                "
+              >
+                <ion-icon
+                  :icon="getItemIcon(item.itemName)"
+                ></ion-icon>
               </div>
 
-              <div class="record-actions">
-                <button
-                  v-if="item.status === 'Unclaimed'"
-                  class="claim-button"
-                  @click="markAsClaimed(item)"
+              <div class="record-main">
+                <h3>{{ item.itemName }}</h3>
+
+                <span>
+                  <ion-icon :icon="locationOutline"></ion-icon>
+                  {{ item.location }}
+                </span>
+
+                <span>
+                  <ion-icon :icon="calendarOutline"></ion-icon>
+                  {{ formatDate(item.date) }}
+                </span>
+
+                <p>
+                  {{ item.description }}
+                </p>
+              </div>
+
+              <div class="record-badges">
+                <span
+                  class="badge"
+                  :class="
+                    item.type === 'Lost'
+                      ? 'lost-badge'
+                      : 'found-badge'
+                  "
                 >
-                  ✓ Mark Claimed
+                  {{ item.type }}
+                </span>
+
+                <span
+                  class="badge"
+                  :class="
+                    item.status === 'Claimed'
+                      ? 'claimed-badge'
+                      : 'unclaimed-badge'
+                  "
+                >
+                  {{ item.status }}
+                </span>
+              </div>
+
+              <!-- MENU -->
+              <div class="menu-wrapper">
+                <button
+                  class="menu-button"
+                  @click="toggleMenu(item.id)"
+                >
+                  <ion-icon :icon="ellipsisVertical"></ion-icon>
                 </button>
 
-                <button
-                  v-else
-                  class="unclaim-button"
-                  @click="markAsUnclaimed(item)"
+                <div
+                  v-if="openedMenu === item.id"
+                  class="item-menu"
                 >
-                  ↶ Mark Unclaimed
-                </button>
+                  <button @click="editItem(item)">
+                    <ion-icon :icon="createOutline"></ion-icon>
+                    Edit
+                  </button>
 
-                <button
-                  class="edit-button"
-                  @click="editItem(item)"
-                >
-                  Edit
-                </button>
-
-                <button
-                  class="delete-button"
-                  @click="deleteItemRecord(item.id)"
-                >
-                  Delete
-                </button>
+                  <button
+                    class="delete-option"
+                    @click="deleteItemRecord(item.id)"
+                  >
+                    <ion-icon :icon="trashOutline"></ion-icon>
+                    Delete
+                  </button>
+                </div>
               </div>
             </article>
           </div>
         </section>
-      </div>
+      </main>
 
-      <!-- =========================
-           BOTTOM NAVIGATION
-      ========================== -->
-      <nav class="bottom-navigation">
-        <button
-          class="nav-item"
-          :class="{ active: activeTab === 'home' }"
-          @click="changeTab('home')"
-        >
-          <span class="nav-icon">⌂</span>
-          <span>Home</span>
-        </button>
-
-        <button
-          class="nav-add"
-          :class="{ active: activeTab === 'add' }"
-          @click="openAddScreen"
-          aria-label="Add Item"
-        >
-          <span>＋</span>
-        </button>
-
-        <button
-          class="nav-item"
-          :class="{ active: activeTab === 'records' }"
-          @click="changeTab('records')"
-        >
-          <span class="nav-icon">▤</span>
-          <span>Records</span>
-        </button>
-      </nav>
-
+      <!-- TOAST -->
       <ion-toast
         :is-open="toastOpen"
         :message="toastMessage"
-        :duration="2000"
+        :duration="2200"
         position="top"
         @didDismiss="toastOpen = false"
       ></ion-toast>
     </ion-content>
+
+    <!-- ================================================= -->
+    <!-- BOTTOM NAVIGATION -->
+    <!-- ================================================= -->
+
+    <nav class="bottom-nav">
+      <button
+        class="nav-button"
+        :class="{ active: activeScreen === 'home' }"
+        @click="goHome"
+      >
+        <ion-icon
+          :icon="
+            activeScreen === 'home'
+              ? home
+              : homeOutline
+          "
+        ></ion-icon>
+
+        <span>Home</span>
+      </button>
+
+      <button
+        class="add-button"
+        :class="{ active: activeScreen === 'form' }"
+        @click="openForm()"
+      >
+        <ion-icon :icon="add"></ion-icon>
+      </button>
+
+      <button
+        class="nav-button"
+        :class="{ active: activeScreen === 'records' }"
+        @click="goRecords"
+      >
+        <ion-icon
+          :icon="
+            activeScreen === 'records'
+              ? list
+              : listOutline
+          "
+        ></ion-icon>
+
+        <span>Records</span>
+      </button>
+    </nav>
   </ion-page>
 </template>
 
@@ -545,16 +1032,50 @@ import {
   IonPage,
   IonHeader,
   IonToolbar,
-  IonTitle,
   IonContent,
   IonInput,
   IonTextarea,
-  IonSelect,
-  IonSelectOption,
-  IonSearchbar,
+  IonIcon,
   IonToast,
   IonSpinner
 } from '@ionic/vue';
+
+import {
+  add,
+  alertCircleOutline,
+  arrowBackOutline,
+  arrowForwardOutline,
+  calendarOutline,
+  cameraOutline,
+  checkmark,
+  checkmarkCircle,
+  checkmarkCircleOutline,
+  createOutline,
+  cubeOutline,
+  documentTextOutline,
+  ellipsisVertical,
+  fileTrayOutline,
+  happyOutline,
+  home,
+  homeOutline,
+  keyOutline,
+  list,
+  listOutline,
+  location,
+  locationOutline,
+  lockClosedOutline,
+  notificationsOutline,
+  optionsOutline,
+  paperPlaneOutline,
+  phonePortraitOutline,
+  refreshOutline,
+  sadOutline,
+  saveOutline,
+  searchCircleOutline,
+  searchOutline,
+  trashOutline,
+  walletOutline
+} from 'ionicons/icons';
 
 import {
   addDoc,
@@ -571,11 +1092,16 @@ import {
 import {
   computed,
   onMounted,
+  onUnmounted,
   reactive,
   ref
 } from 'vue';
 
 import { db } from '../firebase';
+
+/* =========================================================
+   TYPES
+========================================================= */
 
 interface LostFoundItem {
   id: string;
@@ -583,47 +1109,268 @@ interface LostFoundItem {
   description: string;
   location: string;
   date: string;
-  type: string;
-  status: string;
+  type: 'Lost' | 'Found';
+  status: 'Unclaimed' | 'Claimed';
 }
 
-type TabName = 'home' | 'add' | 'records';
+type Screen =
+  | 'home'
+  | 'form'
+  | 'records';
 
-const activeTab = ref<TabName>('home');
+/* =========================================================
+   APP STATE
+========================================================= */
 
-const items = ref<LostFoundItem[]>([]);
-const loading = ref(false);
+const activeScreen =
+  ref<Screen>('home');
 
-const isEditing = ref(false);
-const editingId = ref('');
+const currentStep =
+  ref(1);
 
-const searchText = ref('');
-const recordFilter = ref('All');
+const items =
+  ref<LostFoundItem[]>([]);
 
-const toastOpen = ref(false);
-const toastMessage = ref('');
+const loading =
+  ref(false);
+
+const isEditing =
+  ref(false);
+
+const editingId =
+  ref('');
+
+const searchText =
+  ref('');
+
+const recordFilter =
+  ref('All');
+
+const toastOpen =
+  ref(false);
+
+const toastMessage =
+  ref('');
+
+const openedMenu =
+  ref('');
+
+/* =========================================================
+   NOTIFICATIONS
+========================================================= */
+
+const notificationsOpen = ref(false);
+const readNotificationIds = ref<string[]>([]);
+
+const notifications = computed(() => {
+  return items.value.slice(0, 8).map((item) => {
+    const kind = item.status === 'Claimed'
+      ? 'claimed'
+      : item.type === 'Found'
+      ? 'found'
+      : 'lost';
+
+    return {
+      id: `${item.id}-${item.status}`,
+      kind,
+      title: item.status === 'Claimed'
+        ? 'Item Claimed!'
+        : item.type === 'Found'
+        ? 'New Found Item'
+        : 'New Lost Item',
+      message: item.status === 'Claimed'
+        ? `${item.itemName} has been marked as claimed.`
+        : `${item.itemName} was reported ${item.type.toLowerCase()} at ${item.location}.`,
+      dateLabel: formatDate(item.date)
+    };
+  });
+});
+
+const unreadCount = computed(() => {
+  return notifications.value.filter(
+    (notification) => !readNotificationIds.value.includes(notification.id)
+  ).length;
+});
+
+const isNotificationRead = (id: string) => {
+  return readNotificationIds.value.includes(id);
+};
+
+const saveReadNotifications = () => {
+  localStorage.setItem(
+    'lost-found-read-notifications',
+    JSON.stringify(readNotificationIds.value)
+  );
+};
+
+const toggleNotifications = () => {
+  notificationsOpen.value = !notificationsOpen.value;
+};
+
+const markAllAsRead = () => {
+  readNotificationIds.value = notifications.value.map(
+    (notification) => notification.id
+  );
+  saveReadNotifications();
+};
+
+const openNotification = (id: string) => {
+  if (!readNotificationIds.value.includes(id)) {
+    readNotificationIds.value.push(id);
+    saveReadNotifications();
+  }
+
+  notificationsOpen.value = false;
+  activeScreen.value = 'records';
+};
+
+/* =========================================================
+   PHOTO PICKER
+========================================================= */
+
+const photoInput =
+  ref<HTMLInputElement | null>(null);
+
+const selectedPhoto =
+  ref<File | null>(null);
+
+const photoPreview =
+  ref('');
+
+const openPhotoPicker = () => {
+  photoInput.value?.click();
+};
+
+const clearPhotoPreviewUrl = () => {
+  if (
+    photoPreview.value &&
+    photoPreview.value.startsWith('blob:')
+  ) {
+    URL.revokeObjectURL(
+      photoPreview.value
+    );
+  }
+};
+
+const handlePhotoSelected = (
+  event: Event
+) => {
+  const input =
+    event.target as HTMLInputElement;
+
+  if (
+    !input.files ||
+    input.files.length === 0
+  ) {
+    return;
+  }
+
+  const file =
+    input.files[0];
+
+  /* IMAGE ONLY */
+  if (
+    !file.type.startsWith('image/')
+  ) {
+    showToast(
+      'Please select an image file.'
+    );
+
+    input.value = '';
+
+    return;
+  }
+
+  /* MAX 5 MB */
+  const maximumSize =
+    5 * 1024 * 1024;
+
+  if (
+    file.size > maximumSize
+  ) {
+    showToast(
+      'Photo must be smaller than 5 MB.'
+    );
+
+    input.value = '';
+
+    return;
+  }
+
+  clearPhotoPreviewUrl();
+
+  selectedPhoto.value =
+    file;
+
+  photoPreview.value =
+    URL.createObjectURL(file);
+
+  showToast(
+    'Photo selected successfully.'
+  );
+};
+
+const removePhoto = () => {
+  clearPhotoPreviewUrl();
+
+  selectedPhoto.value =
+    null;
+
+  photoPreview.value =
+    '';
+
+  if (
+    photoInput.value
+  ) {
+    photoInput.value.value =
+      '';
+  }
+};
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+const filters = [
+  'All',
+  'Lost',
+  'Found',
+  'Unclaimed',
+  'Claimed'
+];
+
+/* =========================================================
+   FORM
+========================================================= */
 
 const form = reactive({
   itemName: '',
   description: '',
   location: '',
   date: '',
-  type: 'Lost',
-  status: 'Unclaimed'
+  type: 'Lost' as 'Lost' | 'Found',
+  status: 'Unclaimed' as
+    | 'Unclaimed'
+    | 'Claimed'
 });
 
-const showToast = (message: string) => {
-  toastMessage.value = message;
-  toastOpen.value = true;
+/* =========================================================
+   TOAST
+========================================================= */
+
+const showToast = (
+  message: string
+) => {
+  toastMessage.value =
+    message;
+
+  toastOpen.value =
+    true;
 };
 
-const scrollToTop = () => {
-  const content = document.querySelector('ion-content');
-
-  if (content) {
-    (content as HTMLIonContentElement).scrollToTop(250);
-  }
-};
+/* =========================================================
+   RESET FORM
+========================================================= */
 
 const resetForm = () => {
   form.itemName = '';
@@ -635,39 +1382,98 @@ const resetForm = () => {
 
   isEditing.value = false;
   editingId.value = '';
+
+  currentStep.value = 1;
+
+  removePhoto();
 };
 
-const changeTab = (tab: TabName) => {
-  if (tab !== 'add' && isEditing.value) {
-    resetForm();
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+const goHome = () => {
+  openedMenu.value = '';
+  notificationsOpen.value = false;
+
+  activeScreen.value =
+    'home';
+
+  currentStep.value =
+    1;
+};
+
+const goRecords = () => {
+  openedMenu.value = '';
+  notificationsOpen.value = false;
+
+  activeScreen.value =
+    'records';
+};
+
+const openForm = (
+  type?: 'Lost' | 'Found'
+) => {
+  resetForm();
+
+  if (type) {
+    form.type = type;
   }
 
-  activeTab.value = tab;
-
-  setTimeout(() => {
-    scrollToTop();
-  }, 50);
+  activeScreen.value =
+    'form';
 };
 
-const openAddScreen = () => {
-  if (!isEditing.value) {
-    resetForm();
+const searchFromHome = () => {
+  activeScreen.value =
+    'records';
+};
+
+/* =========================================================
+   FORM STEPS
+========================================================= */
+
+const nextStep = () => {
+  if (
+    currentStep.value === 1
+  ) {
+    if (
+      !form.itemName.trim() ||
+      !form.description.trim()
+    ) {
+      showToast(
+        'Please complete the item details.'
+      );
+
+      return;
+    }
+
+    currentStep.value = 2;
+
+    return;
   }
 
-  activeTab.value = 'add';
+  if (
+    currentStep.value === 2
+  ) {
+    if (
+      !form.location.trim() ||
+      !form.date
+    ) {
+      showToast(
+        'Please enter the location and date.'
+      );
 
-  setTimeout(() => {
-    scrollToTop();
-  }, 50);
+      return;
+    }
+
+    currentStep.value = 3;
+  }
 };
 
-const goToRecords = () => {
-  activeTab.value = 'records';
-
-  setTimeout(() => {
-    scrollToTop();
-  }, 50);
-};
+/* =========================================================
+   CREATE / UPDATE
+========================================================= */
 
 const saveItem = async () => {
   if (
@@ -676,289 +1482,447 @@ const saveItem = async () => {
     !form.location.trim() ||
     !form.date
   ) {
-    showToast('Please complete all required fields.');
+    showToast(
+      'Please complete all required fields.'
+    );
+
     return;
   }
 
   try {
     loading.value = true;
 
-    if (isEditing.value && editingId.value) {
-      const itemRef = doc(db, 'items', editingId.value);
+    const itemData = {
+      itemName:
+        form.itemName.trim(),
 
-      await updateDoc(itemRef, {
-        itemName: form.itemName.trim(),
-        description: form.description.trim(),
-        location: form.location.trim(),
-        date: form.date,
-        type: form.type,
-        status: form.status
-      });
+      description:
+        form.description.trim(),
 
-      showToast('Item updated successfully.');
-    } else {
-      await addDoc(collection(db, 'items'), {
-        itemName: form.itemName.trim(),
-        description: form.description.trim(),
-        location: form.location.trim(),
-        date: form.date,
-        type: form.type,
-        status: form.status,
-        createdAt: serverTimestamp()
-      });
+      location:
+        form.location.trim(),
 
-      showToast('Item added successfully.');
+      date:
+        form.date,
+
+      type:
+        form.type,
+
+      status:
+        form.status
+    };
+
+    /* UPDATE */
+    if (
+      isEditing.value &&
+      editingId.value
+    ) {
+      await updateDoc(
+        doc(
+          db,
+          'items',
+          editingId.value
+        ),
+        itemData
+      );
+
+      showToast(
+        'Item updated successfully.'
+      );
     }
 
+    /* CREATE */
+    else {
+      await addDoc(
+        collection(
+          db,
+          'items'
+        ),
+        {
+          ...itemData,
+          createdAt:
+            serverTimestamp()
+        }
+      );
+
+      showToast(
+        'Report submitted successfully.'
+      );
+    }
+
+    /*
+      IMPORTANT:
+
+      selectedPhoto.value contains the
+      selected image file.
+
+      For now this version only provides:
+      - Gallery / Files picker
+      - Image validation
+      - Image preview
+      - Change photo
+      - Remove photo
+
+      Firebase Storage will be connected
+      in the next step so the image itself
+      can be permanently saved.
+    */
+
     resetForm();
+
     await loadItems();
 
-    activeTab.value = 'records';
-
-    setTimeout(() => {
-      scrollToTop();
-    }, 50);
+    activeScreen.value =
+      'records';
   } catch (error) {
-    console.error('Error saving item:', error);
-    showToast('Unable to save item.');
+    console.error(
+      'Error saving item:',
+      error
+    );
+
+    showToast(
+      'Unable to save item.'
+    );
   } finally {
-    loading.value = false;
+    loading.value =
+      false;
   }
 };
+
+/* =========================================================
+   READ
+========================================================= */
 
 const loadItems = async () => {
   try {
     loading.value = true;
 
-    const itemsQuery = query(
-      collection(db, 'items'),
-      orderBy('createdAt', 'desc')
-    );
+    const itemsQuery =
+      query(
+        collection(
+          db,
+          'items'
+        ),
 
-    const snapshot = await getDocs(itemsQuery);
-
-    items.value = snapshot.docs.map((document) => {
-      const data = document.data();
-
-      return {
-        id: document.id,
-        itemName: data.itemName ?? '',
-        description: data.description ?? '',
-        location: data.location ?? '',
-        date: data.date ?? '',
-        type: data.type ?? 'Lost',
-        status: data.status ?? 'Unclaimed'
-      };
-    });
-  } catch (error) {
-    console.error('Error loading ordered items:', error);
-
-    try {
-      const snapshot = await getDocs(
-        collection(db, 'items')
+        orderBy(
+          'createdAt',
+          'desc'
+        )
       );
 
-      items.value = snapshot.docs.map((document) => {
-        const data = document.data();
+    const snapshot =
+      await getDocs(
+        itemsQuery
+      );
 
-        return {
-          id: document.id,
-          itemName: data.itemName ?? '',
-          description: data.description ?? '',
-          location: data.location ?? '',
-          date: data.date ?? '',
-          type: data.type ?? 'Lost',
-          status: data.status ?? 'Unclaimed'
-        };
-      });
-    } catch (secondError) {
+    items.value =
+      snapshot.docs.map(
+        (document) => {
+          const data =
+            document.data();
+
+          return {
+            id:
+              document.id,
+
+            itemName:
+              data.itemName ?? '',
+
+            description:
+              data.description ?? '',
+
+            location:
+              data.location ?? '',
+
+            date:
+              data.date ?? '',
+
+            type:
+              data.type ?? 'Lost',
+
+            status:
+              data.status ?? 'Unclaimed'
+          };
+        }
+      );
+  } catch (error) {
+    console.error(
+      'Ordered loading failed:',
+      error
+    );
+
+    /* FALLBACK */
+    try {
+      const snapshot =
+        await getDocs(
+          collection(
+            db,
+            'items'
+          )
+        );
+
+      items.value =
+        snapshot.docs.map(
+          (document) => {
+            const data =
+              document.data();
+
+            return {
+              id:
+                document.id,
+
+              itemName:
+                data.itemName ?? '',
+
+              description:
+                data.description ?? '',
+
+              location:
+                data.location ?? '',
+
+              date:
+                data.date ?? '',
+
+              type:
+                data.type ?? 'Lost',
+
+              status:
+                data.status ?? 'Unclaimed'
+            };
+          }
+        );
+    } catch (
+      secondError
+    ) {
       console.error(
         'Fallback loading error:',
         secondError
       );
 
-      showToast('Unable to load records.');
+      showToast(
+        'Unable to load records.'
+      );
     }
   } finally {
-    loading.value = false;
+    loading.value =
+      false;
   }
 };
 
-const editItem = (item: LostFoundItem) => {
-  form.itemName = item.itemName;
-  form.description = item.description;
-  form.location = item.location;
-  form.date = item.date;
-  form.type = item.type;
-  form.status = item.status;
+/* =========================================================
+   EDIT
+========================================================= */
 
-  editingId.value = item.id;
-  isEditing.value = true;
-  activeTab.value = 'add';
-
-  setTimeout(() => {
-    scrollToTop();
-  }, 50);
-};
-
-const cancelEdit = () => {
-  resetForm();
-  activeTab.value = 'records';
-
-  setTimeout(() => {
-    scrollToTop();
-  }, 50);
-};
-
-const deleteItemRecord = async (id: string) => {
-  const confirmed = window.confirm(
-    'Are you sure you want to delete this record?'
-  );
-
-  if (!confirmed) return;
-
-  try {
-    loading.value = true;
-
-    await deleteDoc(doc(db, 'items', id));
-
-    items.value = items.value.filter(
-      (item) => item.id !== id
-    );
-
-    showToast('Item deleted successfully.');
-  } catch (error) {
-    console.error('Error deleting item:', error);
-    showToast('Unable to delete item.');
-  } finally {
-    loading.value = false;
-  }
-};
-
-const updateStatus = async (
-  item: LostFoundItem,
-  status: 'Claimed' | 'Unclaimed'
+const editItem = (
+  item: LostFoundItem
 ) => {
-  try {
-    await updateDoc(
-      doc(db, 'items', item.id),
-      {
-        status
+  form.itemName =
+    item.itemName;
+
+  form.description =
+    item.description;
+
+  form.location =
+    item.location;
+
+  form.date =
+    item.date;
+
+  form.type =
+    item.type;
+
+  form.status =
+    item.status;
+
+  editingId.value =
+    item.id;
+
+  isEditing.value =
+    true;
+
+  currentStep.value =
+    1;
+
+  openedMenu.value =
+    '';
+
+  removePhoto();
+
+  activeScreen.value =
+    'form';
+};
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+const deleteItemRecord =
+  async (id: string) => {
+    const confirmed =
+      window.confirm(
+        'Are you sure you want to delete this record?'
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      loading.value =
+        true;
+
+      await deleteDoc(
+        doc(
+          db,
+          'items',
+          id
+        )
+      );
+
+      openedMenu.value =
+        '';
+
+      showToast(
+        'Item deleted successfully.'
+      );
+
+      await loadItems();
+    } catch (error) {
+      console.error(
+        'Error deleting item:',
+        error
+      );
+
+      showToast(
+        'Unable to delete item.'
+      );
+    } finally {
+      loading.value =
+        false;
+    }
+  };
+
+/* =========================================================
+   MENU
+========================================================= */
+
+const toggleMenu = (
+  id: string
+) => {
+  openedMenu.value =
+    openedMenu.value === id
+      ? ''
+      : id;
+};
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+const lostCount =
+  computed(() => {
+    return items.value.filter(
+      (item) =>
+        item.type === 'Lost'
+    ).length;
+  });
+
+const foundCount =
+  computed(() => {
+    return items.value.filter(
+      (item) =>
+        item.type === 'Found'
+    ).length;
+  });
+
+const claimedCount =
+  computed(() => {
+    return items.value.filter(
+      (item) =>
+        item.status === 'Claimed'
+    ).length;
+  });
+
+/* =========================================================
+   RECENT
+========================================================= */
+
+const recentItems =
+  computed(() => {
+    return items.value.slice(
+      0,
+      4
+    );
+  });
+
+/* =========================================================
+   SEARCH + FILTER
+========================================================= */
+
+const filteredItems =
+  computed(() => {
+    const search =
+      searchText.value
+        .toLowerCase()
+        .trim();
+
+    return items.value.filter(
+      (item) => {
+        const matchesSearch =
+          item.itemName
+            .toLowerCase()
+            .includes(search) ||
+
+          item.location
+            .toLowerCase()
+            .includes(search) ||
+
+          item.description
+            .toLowerCase()
+            .includes(search);
+
+        const matchesFilter =
+          recordFilter.value === 'All' ||
+
+          item.type ===
+            recordFilter.value ||
+
+          item.status ===
+            recordFilter.value;
+
+        return (
+          matchesSearch &&
+          matchesFilter
+        );
       }
     );
-
-    const targetItem = items.value.find(
-      (record) => record.id === item.id
-    );
-
-    if (targetItem) {
-      targetItem.status = status;
-    }
-
-    showToast(
-      status === 'Claimed'
-        ? 'Item marked as claimed.'
-        : 'Item marked as unclaimed.'
-    );
-  } catch (error) {
-    console.error(
-      'Error updating status:',
-      error
-    );
-
-    showToast('Unable to update item status.');
-  }
-};
-
-const markAsClaimed = (
-  item: LostFoundItem
-) => {
-  updateStatus(item, 'Claimed');
-};
-
-const markAsUnclaimed = (
-  item: LostFoundItem
-) => {
-  updateStatus(item, 'Unclaimed');
-};
-
-const viewRecord = (
-  item: LostFoundItem
-) => {
-  searchText.value = item.itemName;
-  recordFilter.value = 'All';
-  activeTab.value = 'records';
-
-  setTimeout(() => {
-    scrollToTop();
-  }, 50);
-};
-
-const filteredItems = computed(() => {
-  return items.value.filter((item) => {
-    const search =
-      searchText.value.toLowerCase().trim();
-
-    const matchesSearch =
-      item.itemName
-        .toLowerCase()
-        .includes(search) ||
-      item.location
-        .toLowerCase()
-        .includes(search) ||
-      item.description
-        .toLowerCase()
-        .includes(search);
-
-    let matchesFilter = true;
-
-    if (recordFilter.value === 'Lost') {
-      matchesFilter = item.type === 'Lost';
-    }
-
-    if (recordFilter.value === 'Found') {
-      matchesFilter = item.type === 'Found';
-    }
-
-    if (recordFilter.value === 'Claimed') {
-      matchesFilter =
-        item.status === 'Claimed';
-    }
-
-    return matchesSearch && matchesFilter;
   });
-});
 
-const recentItems = computed(() => {
-  return items.value.slice(0, 3);
-});
+/* =========================================================
+   DATE
+========================================================= */
 
-const lostCount = computed(() => {
-  return items.value.filter(
-    (item) => item.type === 'Lost'
-  ).length;
-});
+const formatDate = (
+  date: string
+) => {
+  if (!date) {
+    return '';
+  }
 
-const foundCount = computed(() => {
-  return items.value.filter(
-    (item) => item.type === 'Found'
-  ).length;
-});
+  const parsed =
+    new Date(
+      `${date}T00:00:00`
+    );
 
-const claimedCount = computed(() => {
-  return items.value.filter(
-    (item) => item.status === 'Claimed'
-  ).length;
-});
+  if (
+    Number.isNaN(
+      parsed.getTime()
+    )
+  ) {
+    return date;
+  }
 
-const formatDate = (dateValue: string) => {
-  if (!dateValue) return 'No date';
-
-  const date = new Date(
-    `${dateValue}T00:00:00`
-  );
-
-  return date.toLocaleDateString(
+  return parsed.toLocaleDateString(
     'en-US',
     {
       month: 'short',
@@ -968,1283 +1932,2752 @@ const formatDate = (dateValue: string) => {
   );
 };
 
+/* =========================================================
+   ITEM ICON
+========================================================= */
+
+const getItemIcon = (
+  name: string
+) => {
+  const value =
+    name.toLowerCase();
+
+  if (
+    value.includes('wallet') ||
+    value.includes('purse')
+  ) {
+    return walletOutline;
+  }
+
+  if (
+    value.includes('phone') ||
+    value.includes('iphone') ||
+    value.includes('mobile')
+  ) {
+    return phonePortraitOutline;
+  }
+
+  if (
+    value.includes('key')
+  ) {
+    return keyOutline;
+  }
+
+  return cubeOutline;
+};
+
+/* =========================================================
+   LIFECYCLE
+========================================================= */
+
 onMounted(() => {
+  try {
+    const saved = localStorage.getItem('lost-found-read-notifications');
+    if (saved) {
+      readNotificationIds.value = JSON.parse(saved);
+    }
+  } catch (error) {
+    console.warn('Unable to load notification state:', error);
+  }
+
   loadItems();
+});
+
+onUnmounted(() => {
+  clearPhotoPreviewUrl();
 });
 </script>
 
 <style scoped>
-/* ==================================
-   GLOBAL
-================================== */
+/* =========================================================
+   BASE
+========================================================= */
 
 ion-content {
-  --background: #07111f;
+  --background:
+    radial-gradient(
+      circle at top left,
+      rgba(126, 211, 255, 0.23),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(109, 181, 255, 0.16),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      #f8fcff 0%,
+      #eef7ff 52%,
+      #f8fbff 100%
+    );
+
+  --padding-bottom: 110px;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.app-header {
+  box-shadow: none;
+  overflow: visible !important;
+}
+
+.app-header ion-toolbar {
+  overflow: visible !important;
+}
+
+.app-header::after {
+  display: none;
 }
 
 ion-toolbar {
-  --background: rgba(7, 17, 31, 0.96);
-  --color: #ffffff;
-  --border-color: rgba(148, 163, 184, 0.1);
-  min-height: 62px;
+  --background:
+    rgba(
+      249,
+      253,
+      255,
+      0.94
+    );
+
+  --border-color:
+    transparent;
+
+  min-height: 76px;
+
+  backdrop-filter:
+    blur(20px);
 }
 
-ion-title {
-  padding-inline: 20px;
-}
+.header-content {
+  width:
+    min(
+      100% - 28px,
+      720px
+    );
 
-.brand-title {
+  min-height: 76px;
+
+  margin: auto;
+
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  cursor: pointer;
+}
+
+.brand-logo {
+  width: 45px;
+  height: 45px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 14px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      145deg,
+      #3db7f2,
+      #0871e7
+    );
+
+  box-shadow:
+    0 9px 22px
+    rgba(
+      20,
+      112,
+      222,
+      0.23
+    );
+}
+
+.brand-logo ion-icon {
+  font-size: 24px;
+}
+
+.brand h1,
+.form-header h1 {
+  margin: 0;
+
+  color: #0b2b60;
+
   font-size: 19px;
   font-weight: 900;
-  letter-spacing: -0.3px;
 }
 
-.brand-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 10px;
-  background: linear-gradient(
-    135deg,
-    #2563eb,
-    #7c3aed
-  );
-  font-size: 22px;
+.brand p,
+.form-header p {
+  margin:
+    2px 0 0;
+
+  color: #6b82a1;
+
+  font-size: 10px;
 }
+
+.header-icon-button,
+.back-button {
+  width: 43px;
+  height: 43px;
+
+  flex-shrink: 0;
+
+  border:
+    1px solid
+    #dfeaf4;
+
+  border-radius: 14px;
+
+  display: grid;
+  place-items: center;
+
+  color: #173a70;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    );
+
+  box-shadow:
+    0 6px 17px
+    rgba(
+      42,
+      88,
+      140,
+      0.08
+    );
+
+  position: relative;
+}
+
+.header-icon-button ion-icon,
+.back-button ion-icon {
+  font-size: 21px;
+}
+
+.notification-dot {
+  position: absolute;
+
+  width: 8px;
+  height: 8px;
+
+  top: 7px;
+  right: 7px;
+
+  border:
+    2px solid white;
+
+  border-radius: 50%;
+
+  background: #f0445c;
+}
+
+.notification-wrapper {
+  position: relative;
+}
+
+.notification-count {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border: 2px solid white;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: white;
+  background: #f0445c;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.notification-wrapper .notification-dot {
+  display: none;
+}
+
+.notification-panel {
+  position: fixed;
+  z-index: 99999;
+  top: 70px;
+  right: max(12px, calc((100vw - 720px) / 2 + 12px));
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(520px, calc(100vh - 92px));
+  overflow: hidden;
+  border: 1px solid #dce9f4;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 22px 55px rgba(28, 65, 108, 0.22);
+  backdrop-filter: blur(22px);
+}
+
+.notification-panel-header {
+  padding: 16px;
+  border-bottom: 1px solid #e8f0f7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-panel-header h3 {
+  margin: 0;
+  color: #0b2b60;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.notification-panel-header p {
+  margin: 2px 0 0;
+  color: #7c90aa;
+  font-size: 9px;
+}
+
+.mark-read-button {
+  border: 0;
+  padding: 7px 9px;
+  border-radius: 9px;
+  color: #0b6bdc;
+  background: #eaf4ff;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.notification-list {
+  max-height: 410px;
+  overflow-y: auto;
+  padding: 7px;
+}
+
+.notification-item {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 14px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 8px;
+  align-items: center;
+  gap: 9px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.notification-item + .notification-item {
+  margin-top: 2px;
+}
+
+.notification-item.unread {
+  background: #f0f7ff;
+}
+
+.notification-item-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+}
+
+.notification-item-icon.lost { color: #d43851; background: #ffe8ec; }
+.notification-item-icon.found { color: #087d86; background: #dcf8f5; }
+.notification-item-icon.claimed { color: #6d55d9; background: #eeeaff; }
+
+.notification-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-copy strong {
+  color: #12315f;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.notification-copy > span {
+  margin-top: 2px;
+  color: #5f7695;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.notification-copy small {
+  margin-top: 4px;
+  color: #93a3b8;
+  font-size: 8px;
+}
+
+.unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #1477ea;
+}
+
+.notification-empty {
+  min-height: 170px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.notification-empty ion-icon {
+  margin-bottom: 8px;
+  color: #3888e8;
+  font-size: 29px;
+}
+
+.notification-empty strong {
+  color: #17355f;
+  font-size: 11px;
+}
+
+.notification-empty span {
+  margin-top: 4px;
+  color: #8295ad;
+  font-size: 9px;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+/* =========================================================
+   CONTAINER
+========================================================= */
 
 .app-container {
-  width: min(
-    1100px,
-    calc(100% - 30px)
-  );
-  margin: 0 auto;
+  width:
+    min(
+      100% - 24px,
+      720px
+    );
+
+  margin: auto;
+
   padding:
-    30px
-    0
-    calc(120px + env(safe-area-inset-bottom));
+    16px 0
+    calc(
+      110px +
+      env(
+        safe-area-inset-bottom
+      )
+    );
 }
 
 .screen {
-  animation: screenEnter 0.2s ease;
+  animation:
+    screenEnter
+    0.25s ease;
 }
 
 @keyframes screenEnter {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform:
+      translateY(7px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform:
+      translateY(0);
   }
 }
 
-.eyebrow {
-  margin: 0 0 7px !important;
-  color: #60a5fa !important;
-  font-size: 11px !important;
-  font-weight: 900;
-  letter-spacing: 1.4px;
-}
-
-/* ==================================
-   HOME
-================================== */
-
-.welcome-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.welcome-row h1 {
-  margin: 0;
-  color: #f8fafc;
-  font-size: clamp(
-    30px,
-    5vw,
-    48px
-  );
-  line-height: 1.08;
-  letter-spacing: -1.4px;
-  font-weight: 900;
-}
-
-.welcome-text {
-  max-width: 520px;
-  margin: 12px 0 0;
-  color: #94a3b8;
-  line-height: 1.6;
-}
-
-.welcome-mark {
-  flex: 0 0 auto;
-  display: grid;
-  width: 72px;
-  height: 72px;
-  place-items: center;
-  border: 1px solid rgba(
-    96,
-    165,
-    250,
-    0.25
-  );
-  border-radius: 24px;
-  background: rgba(
-    37,
-    99,
-    235,
-    0.12
-  );
-  color: #60a5fa;
-  font-size: 36px;
-}
+/* =========================================================
+   HERO
+========================================================= */
 
 .hero-card {
+  min-height: 320px;
+
   position: relative;
+
   overflow: hidden;
-  padding: 30px;
+
+  padding:
+    29px
+    22px
+    90px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    );
+
   border-radius: 28px;
+
   background:
     linear-gradient(
-      135deg,
-      #1264f5 0%,
-      #3155e7 50%,
-      #7038ed 100%
+      145deg,
+      #eaf8ff,
+      #d9f0ff 50%,
+      #cae9ff
     );
+
   box-shadow:
-    0 22px 55px
-    rgba(37, 99, 235, 0.22);
+    0 18px 40px
+    rgba(
+      57,
+      126,
+      181,
+      0.14
+    );
+}
+
+.hero-card::after {
+  content: '';
+
+  position: absolute;
+
+  left: -10%;
+  bottom: -50px;
+
+  width: 120%;
+  height: 125px;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      #8dd6ad,
+      #65c596
+    );
+}
+
+.hero-circle {
+  position: absolute;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.3
+    );
+}
+
+.circle-one {
+  width: 180px;
+  height: 180px;
+
+  top: -80px;
+  right: -35px;
+}
+
+.circle-two {
+  width: 90px;
+  height: 90px;
+
+  top: 90px;
+  right: 50px;
 }
 
 .hero-content {
+  width: 65%;
+
   position: relative;
-  z-index: 2;
-  max-width: 610px;
+
+  z-index: 4;
 }
 
-.hero-label {
+.hero-eyebrow {
   display: inline-block;
-  margin-bottom: 10px;
-  color: rgba(
-    255,
-    255,
-    255,
-    0.7
-  );
-  font-size: 11px;
+
+  margin-bottom: 9px;
+
+  color: #1680d9;
+
+  font-size: 9px;
   font-weight: 900;
-  letter-spacing: 1.4px;
+
+  letter-spacing: 1px;
 }
 
-.hero-card h2 {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(
-    27px,
-    4vw,
-    40px
-  );
-  font-weight: 900;
+.hero-content h2 {
+  margin:
+    0 0 11px;
+
+  color: #08265c;
+
+  font-size:
+    clamp(
+      24px,
+      7vw,
+      34px
+    );
+
+  font-weight: 950;
+
+  line-height: 1.08;
+
   letter-spacing: -1px;
 }
 
-.hero-card p {
-  max-width: 520px;
-  margin: 10px 0 22px;
-  color: rgba(
-    255,
-    255,
-    255,
-    0.8
-  );
-  line-height: 1.6;
+.hero-content p {
+  max-width: 250px;
+
+  margin: 0;
+
+  color: #527097;
+
+  font-size: 11px;
+
+  line-height: 1.55;
 }
 
-.hero-button,
-.save-button,
-.secondary-action {
+/* =========================================================
+   HERO CHARACTER
+========================================================= */
+
+.hero-visual {
+  width: 130px;
+  height: 180px;
+
+  position: absolute;
+
+  right: 6px;
+  bottom: 65px;
+
+  z-index: 5;
+}
+
+.location-pin {
+  width: 50px;
+  height: 50px;
+
+  position: absolute;
+
+  left: -15px;
+  top: 25px;
+
+  border-radius:
+    50%
+    50%
+    50%
+    8px;
+
+  display: grid;
+  place-items: center;
+
+  transform:
+    rotate(-45deg);
+
+  color: white;
+
+  background:
+    linear-gradient(
+      145deg,
+      #4ca9fa,
+      #176de2
+    );
+
+  box-shadow:
+    0 10px 22px
+    rgba(
+      28,
+      111,
+      225,
+      0.28
+    );
+}
+
+.location-pin ion-icon {
+  font-size: 25px;
+
+  transform:
+    rotate(45deg);
+}
+
+.student {
+  width: 100px;
+  height: 150px;
+
+  position: absolute;
+
+  right: 0;
+  bottom: 0;
+}
+
+.student-head {
+  width: 72px;
+  height: 78px;
+
+  margin: auto;
+
+  position: relative;
+}
+
+.face {
+  width: 58px;
+  height: 61px;
+
+  position: absolute;
+
+  left: 7px;
+  top: 14px;
+
+  border-radius:
+    48%
+    48%
+    44%
+    44%;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffd2ac,
+      #efb37f
+    );
+}
+
+.hair {
+  width: 74px;
+  height: 37px;
+
+  position: absolute;
+
+  z-index: 2;
+
+  top: 0;
+
+  border-radius:
+    55%
+    55%
+    35%
+    25%;
+
+  background: #173553;
+}
+
+.eye {
+  width: 4px;
+  height: 5px;
+
+  position: absolute;
+
+  top: 28px;
+
+  border-radius: 50%;
+
+  background: #23364e;
+}
+
+.left-eye {
+  left: 15px;
+}
+
+.right-eye {
+  right: 15px;
+}
+
+.smile {
+  width: 14px;
+  height: 7px;
+
+  position: absolute;
+
+  left: 22px;
+  bottom: 14px;
+
+  border-bottom:
+    2px solid
+    #b85e55;
+
+  border-radius: 50%;
+}
+
+.student-body {
+  width: 100px;
+  height: 83px;
+
+  margin-top: -2px;
+
+  position: relative;
+
+  border-radius:
+    38px
+    38px
+    10px
+    10px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #167bc4,
+      #07518e
+    );
+}
+
+.hood {
+  width: 55px;
+  height: 23px;
+
+  position: absolute;
+
+  left: 22px;
+  top: 0;
+
+  border:
+    3px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.4
+    );
+
+  border-top: 0;
+
+  border-radius:
+    0
+    0
+    30px
+    30px;
+}
+
+/* =========================================================
+   QUICK ACTIONS
+========================================================= */
+
+.quick-actions {
+  position: absolute;
+
+  z-index: 10;
+
+  left: 13px;
+  right: 13px;
+  bottom: 12px;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 9px;
+}
+
+.quick-card {
+  min-height: 70px;
+
+  padding: 9px;
+
   border: 0;
-  cursor: pointer;
-}
 
-.hero-button {
-  display: inline-flex;
+  border-radius: 18px;
+
+  display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 47px;
-  padding: 0 20px;
-  border-radius: 14px;
-  background: #ffffff;
-  color: #1d4ed8;
-  font-weight: 900;
+
+  gap: 9px;
+
+  text-align: left;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    );
+
   box-shadow:
     0 10px 25px
-    rgba(15, 23, 42, 0.18);
+    rgba(
+      49,
+      104,
+      154,
+      0.14
+    );
 }
 
-.hero-button span {
-  font-size: 21px;
-}
+.quick-card > span:last-child {
+  min-width: 0;
 
-.hero-decoration {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(
-    255,
-    255,
-    255,
-    0.08
-  );
-}
-
-.hero-circle-one {
-  width: 250px;
-  height: 250px;
-  top: -120px;
-  right: 60px;
-}
-
-.hero-circle-two {
-  width: 190px;
-  height: 190px;
-  right: -70px;
-  bottom: -90px;
-}
-
-.section-heading {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 28px 2px 15px;
+  flex-direction: column;
 }
 
-.section-heading h2 {
-  margin: 0 0 4px;
-  color: #f8fafc;
-  font-size: 20px;
+.quick-card strong {
+  color: #0d2c60;
+
+  font-size: 11px;
   font-weight: 900;
 }
 
-.section-heading p {
-  margin: 0;
-  color: #64748b;
-  font-size: 13px;
+.quick-card small {
+  margin-top: 2px;
+
+  color: #7487a4;
+
+  font-size: 8px;
 }
 
-.text-button {
-  border: 0;
-  background: transparent;
-  color: #60a5fa;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
+.quick-icon {
+  width: 41px;
+  height: 41px;
 
-.stats-grid {
+  flex-shrink: 0;
+
   display: grid;
-  grid-template-columns:
-    repeat(4, 1fr);
-  gap: 13px;
+  place-items: center;
+
+  border-radius: 13px;
+
+  color: white;
 }
 
-.stat-box {
+.quick-icon ion-icon {
+  font-size: 20px;
+}
+
+.lost-action {
+  background:
+    linear-gradient(
+      145deg,
+      #4ba6ff,
+      #1768e7
+    );
+}
+
+.found-action {
+  background:
+    linear-gradient(
+      145deg,
+      #24c7c0,
+      #07898f
+    );
+}
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.home-search-row {
+  margin-top: 15px;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr 50px;
+
+  gap: 9px;
+}
+
+.search-box,
+.records-search {
+  min-height: 51px;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid
+    #dfeaf4;
+
+  border-radius: 17px;
+
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 100px;
-  padding: 17px;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.13
-  );
-  border-radius: 20px;
-  background: #0d192a;
+
+  gap: 9px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.93
+    );
+
+  box-shadow:
+    0 7px 20px
+    rgba(
+      51,
+      100,
+      150,
+      0.06
+    );
+}
+
+.search-box ion-icon,
+.records-search ion-icon {
+  flex-shrink: 0;
+
+  color: #173d72;
+
+  font-size: 19px;
+}
+
+.search-box input,
+.records-search input {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  color: #18345d;
+
+  background: transparent;
+
+  font-size: 11px;
+}
+
+.search-box input::placeholder,
+.records-search input::placeholder {
+  color: #8fa2ba;
+}
+
+.filter-button {
+  border:
+    1px solid
+    #dfeaf4;
+
+  border-radius: 16px;
+
+  display: grid;
+  place-items: center;
+
+  color: #173d72;
+
+  background: white;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats-grid {
+  margin-top: 14px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 7px;
+}
+
+.stat-card {
+  min-width: 0;
+
+  padding:
+    11px 7px;
+
+  border:
+    1px solid
+    #e2ecf5;
+
+  border-radius: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.85
+    );
 }
 
 .stat-icon {
+  width: 29px;
+  height: 29px;
+
+  margin-bottom: 7px;
+
+  border-radius: 9px;
+
   display: grid;
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
   place-items: center;
-  border-radius: 14px;
-  font-size: 20px;
-  font-weight: 900;
 }
 
-.stat-box strong {
-  display: block;
-  color: #f8fafc;
-  font-size: 25px;
-  font-weight: 900;
+.total-icon {
+  color: #1479e9;
+  background: #e1f1ff;
 }
 
-.stat-box span {
-  color: #94a3b8;
-  font-size: 12px;
+.lost-icon {
+  color: #d52d4e;
+  background: #ffe5ec;
 }
 
-.total-stat .stat-icon {
-  background: rgba(
-    37,
-    99,
-    235,
-    0.17
-  );
-  color: #60a5fa;
+.found-icon {
+  color: #078b8d;
+  background: #dff8f5;
 }
 
-.lost-stat .stat-icon {
-  background: rgba(
-    239,
-    68,
-    68,
-    0.14
-  );
-  color: #fb7185;
+.claimed-icon {
+  color: #7056dc;
+  background: #eee9ff;
 }
 
-.found-stat .stat-icon {
-  background: rgba(
-    20,
-    184,
-    166,
-    0.14
-  );
-  color: #2dd4bf;
+.stat-card strong {
+  color: #0d2855;
+
+  font-size: 17px;
+  font-weight: 950;
 }
 
-.claimed-stat .stat-icon {
-  background: rgba(
-    34,
-    197,
-    94,
-    0.14
-  );
-  color: #4ade80;
+.stat-card small {
+  margin-top: 2px;
+
+  color: #687f9f;
+
+  font-size: 8px;
 }
 
-.recent-heading {
-  margin-top: 30px;
-}
+/* =========================================================
+   SECTION HEADER
+========================================================= */
 
-.recent-list {
-  display: grid;
-  grid-template-columns:
-    repeat(3, 1fr);
-  gap: 13px;
-}
+.section-header,
+.records-header {
+  margin:
+    22px 2px
+    11px;
 
-.recent-card {
-  display: grid;
-  grid-template-columns:
-    50px 1fr auto;
-  align-items: center;
-  gap: 13px;
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.13
-  );
-  border-radius: 19px;
-  background: #0d192a;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.recent-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(
-    96,
-    165,
-    250,
-    0.35
-  );
-}
-
-.recent-symbol {
-  display: grid;
-  width: 50px;
-  height: 50px;
-  place-items: center;
-  border-radius: 15px;
-  font-size: 20px;
-  font-weight: 900;
-}
-
-.lost-symbol {
-  background: rgba(
-    239,
-    68,
-    68,
-    0.13
-  );
-  color: #fb7185;
-}
-
-.found-symbol {
-  background: rgba(
-    16,
-    185,
-    129,
-    0.13
-  );
-  color: #34d399;
-}
-
-.recent-info {
-  min-width: 0;
-}
-
-.recent-info h3 {
-  overflow: hidden;
-  margin: 0 0 7px;
-  color: #f8fafc;
-  font-size: 15px;
-  font-weight: 850;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.recent-info p {
-  overflow: hidden;
-  margin: 8px 0 0;
-  color: #94a3b8;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mini-badges,
-.badge-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.chevron {
-  color: #64748b;
+.section-header h2,
+.records-header h2 {
+  margin: 0;
+
+  color: #0d2a59;
+
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.section-header button {
+  border: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 3px;
+
+  color: #0c68d6;
+
+  background: transparent;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   RECENT
+========================================================= */
+
+.recent-list,
+.records-list {
+  display: grid;
+
+  gap: 9px;
+}
+
+.recent-item {
+  padding: 10px;
+
+  border:
+    1px solid
+    #e4edf5;
+
+  border-radius: 17px;
+
+  display: grid;
+
+  grid-template-columns:
+    52px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.94
+    );
+}
+
+.item-thumbnail,
+.record-thumbnail {
+  display: grid;
+  place-items: center;
+
+  border-radius: 13px;
+
+  color: #365470;
+}
+
+.item-thumbnail {
+  width: 52px;
+  height: 52px;
+}
+
+.item-thumbnail ion-icon,
+.record-thumbnail ion-icon {
   font-size: 26px;
 }
 
-.home-loading,
-.empty-home,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 220px;
-  padding: 25px;
-  text-align: center;
-  border: 1px dashed rgba(
-    148,
-    163,
-    184,
-    0.18
-  );
-  border-radius: 20px;
-  background: rgba(
-    13,
-    25,
-    42,
-    0.6
-  );
-  color: #94a3b8;
+.lost-thumbnail {
+  background:
+    linear-gradient(
+      145deg,
+      #f0f2f4,
+      #d8dee4
+    );
 }
 
-.home-loading {
-  gap: 12px;
+.found-thumbnail {
+  background:
+    linear-gradient(
+      145deg,
+      #e4f6ff,
+      #d6eefb
+    );
 }
 
-.empty-icon {
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  margin-bottom: 12px;
-  border-radius: 18px;
-  background: rgba(
-    37,
-    99,
-    235,
-    0.13
-  );
-  color: #60a5fa;
-  font-size: 29px;
-}
-
-.empty-home h3,
-.empty-state h3 {
-  margin: 0 0 6px;
-  color: #e2e8f0;
-}
-
-.empty-home p,
-.empty-state p {
-  margin: 0 0 16px;
-  color: #64748b;
-}
-
-/* ==================================
-   ADD / EDIT
-================================== */
-
-.screen-title,
-.records-title {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  margin-bottom: 22px;
-}
-
-.screen-title h1,
-.records-title h1 {
-  margin: 0 0 6px;
-  color: #f8fafc;
-  font-size: 30px;
-  font-weight: 900;
-  letter-spacing: -0.7px;
-}
-
-.screen-title p:not(.eyebrow),
-.records-title p:not(.eyebrow) {
-  margin: 0;
-  color: #94a3b8;
-  line-height: 1.5;
-  font-size: 14px;
-}
-
-.back-button {
-  display: grid;
-  flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.16
-  );
-  border-radius: 13px;
-  background: #0d192a;
-  color: #ffffff;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.form-card {
-  width: min(650px, 100%);
-  margin: 0 auto;
-  padding: 25px;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.14
-  );
-  border-radius: 24px;
-  background: #0d192a;
-  box-shadow:
-    0 20px 50px
-    rgba(0, 0, 0, 0.18);
-}
-
-.form-group {
-  margin-bottom: 19px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #cbd5e1;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.form-group label span {
-  color: #60a5fa;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns:
-    1fr 1fr;
-  gap: 13px;
-}
-
-ion-input,
-ion-textarea,
-ion-select {
-  --background: #091525;
-  --color: #f8fafc;
-  --placeholder-color: #52647d;
-  --placeholder-opacity: 1;
-  --border-color: #293a52;
-  --highlight-color-focused: #3b82f6;
-  --highlight-color-valid: #3b82f6;
-  --highlight-color-invalid: #fb7185;
-  --padding-start: 15px;
-  --padding-end: 15px;
-  border-radius: 13px;
-}
-
-ion-input::part(native),
-ion-textarea::part(native) {
-  color: #f8fafc !important;
-}
-
-ion-select::part(text) {
-  color: #f8fafc !important;
-}
-
-ion-select::part(icon) {
-  color: #94a3b8;
-}
-
-.save-button {
-  display: flex;
-  width: 100%;
-  min-height: 50px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 8px;
-  border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    #2563eb,
-    #4f46e5
-  );
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 900;
-  box-shadow:
-    0 12px 28px
-    rgba(37, 99, 235, 0.25);
-}
-
-.save-button:disabled {
-  opacity: 0.65;
-}
-
-.cancel-button {
-  width: 100%;
-  min-height: 46px;
-  margin-top: 10px;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.18
-  );
-  border-radius: 14px;
-  background: transparent;
-  color: #94a3b8;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-/* ==================================
-   RECORDS
-================================== */
-
-.records-title {
-  justify-content: space-between;
-}
-
-.refresh-icon-button {
-  display: grid;
-  flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  border: 1px solid rgba(
-    96,
-    165,
-    250,
-    0.22
-  );
-  border-radius: 14px;
-  background: #0d192a;
-  color: #60a5fa;
-  font-size: 22px;
-  cursor: pointer;
-}
-
-.records-tools {
-  margin-bottom: 20px;
-}
-
-ion-searchbar {
-  --background: #0d192a;
-  --color: #f8fafc;
-  --placeholder-color: #52647d;
-  --icon-color: #94a3b8;
-  --clear-button-color: #94a3b8;
-  --box-shadow: none;
-  --border-radius: 14px;
-  padding: 0;
-}
-
-.filter-tabs {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.filter-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-tabs button {
-  flex: 0 0 auto;
-  min-width: 75px;
-  min-height: 39px;
-  padding: 0 16px;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.16
-  );
-  border-radius: 12px;
-  background: #0d192a;
-  color: #94a3b8;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.filter-tabs button.active {
-  border-color: #2563eb;
-  background: #2563eb;
-  color: #ffffff;
-  box-shadow:
-    0 8px 18px
-    rgba(37, 99, 235, 0.22);
-}
-
-.records-list {
-  display: grid;
-  gap: 13px;
-}
-
-.record-card {
-  padding: 18px;
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.14
-  );
-  border-radius: 20px;
-  background: #0d192a;
-}
-
-.record-main {
-  display: grid;
-  grid-template-columns:
-    54px minmax(0, 1fr);
-  gap: 15px;
-}
-
-.record-symbol {
-  display: grid;
-  width: 54px;
-  height: 54px;
-  place-items: center;
-  border-radius: 16px;
-  font-size: 21px;
-  font-weight: 900;
-}
-
-.lost-record-symbol {
-  background: rgba(
-    239,
-    68,
-    68,
-    0.13
-  );
-  color: #fb7185;
-}
-
-.found-record-symbol {
-  background: rgba(
-    16,
-    185,
-    129,
-    0.13
-  );
-  color: #34d399;
-}
-
-.record-content {
+.recent-information {
   min-width: 0;
 }
 
-.record-heading {
+.recent-title {
   display: flex;
-  justify-content: space-between;
-  gap: 15px;
+  align-items: center;
+
+  gap: 6px;
 }
 
-.record-heading h3 {
-  margin: 0 0 8px;
-  color: #f8fafc;
-  font-size: 18px;
-  font-weight: 900;
-}
+.recent-title h3 {
+  overflow: hidden;
 
-.date {
-  flex: 0 0 auto;
-  color: #64748b;
+  margin: 0;
+
+  color: #102b59;
+
   font-size: 11px;
+  font-weight: 900;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
+
+.meta-information {
+  margin-top: 5px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.meta-information span {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+
+  color: #667d9e;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
 
 .badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 9px;
+  width: fit-content;
+
+  padding:
+    5px 9px;
+
   border-radius: 999px;
-  font-size: 10px;
-  font-weight: 900;
+
+  font-size: 8px;
+  font-weight: 850;
+
+  white-space: nowrap;
 }
 
 .lost-badge {
-  border: 1px solid rgba(
-    248,
-    113,
-    113,
-    0.2
-  );
-  background: rgba(
-    239,
-    68,
-    68,
-    0.13
-  );
-  color: #fda4af;
+  color: #d12945;
+  background: #ffe4e8;
 }
 
 .found-badge {
-  border: 1px solid rgba(
-    52,
-    211,
-    153,
-    0.2
-  );
-  background: rgba(
-    16,
-    185,
-    129,
-    0.13
-  );
-  color: #6ee7b7;
-}
-
-.claimed-badge {
-  border: 1px solid rgba(
-    74,
-    222,
-    128,
-    0.2
-  );
-  background: rgba(
-    34,
-    197,
-    94,
-    0.13
-  );
-  color: #86efac;
+  color: #1465c3;
+  background: #dcecff;
 }
 
 .unclaimed-badge {
-  border: 1px solid rgba(
-    251,
-    191,
-    36,
-    0.18
-  );
-  background: rgba(
-    245,
-    158,
-    11,
-    0.12
-  );
-  color: #fcd34d;
+  color: #946600;
+  background: #fff0b9;
 }
 
-.record-description {
-  margin: 13px 0 10px;
-  color: #aab6c8;
-  line-height: 1.55;
-  font-size: 13px;
+.claimed-badge {
+  color: #067868;
+  background: #ccf6eb;
 }
 
-.record-location {
+/* =========================================================
+   EMPTY / LOADING
+========================================================= */
+
+.state-card {
+  min-height: 180px;
+
+  padding: 24px;
+
+  border:
+    1px solid
+    #e1ebf4;
+
+  border-radius: 21px;
+
   display: flex;
+  flex-direction: column;
+
   align-items: center;
-  gap: 6px;
-  color: #7f91aa;
+  justify-content: center;
+
+  text-align: center;
+
+  color: #6c819e;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.84
+    );
+}
+
+.state-icon {
+  width: 54px;
+  height: 54px;
+
+  margin-bottom: 10px;
+
+  border-radius: 16px;
+
+  display: grid;
+  place-items: center;
+
+  color: #1475e3;
+
+  background: #e4f2ff;
+}
+
+.state-icon ion-icon {
+  font-size: 26px;
+}
+
+.state-card h3 {
+  margin: 0;
+
+  color: #112e5d;
+
+  font-size: 16px;
+}
+
+.state-card p {
+  margin:
+    6px 0
+    13px;
+
+  color: #7186a2;
+
+  font-size: 10px;
+}
+
+.small-primary-button {
+  padding:
+    10px 15px;
+
+  border: 0;
+
+  border-radius: 11px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      #328cf5,
+      #0864e5
+    );
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-screen {
+  max-width: 590px;
+
+  margin: auto;
+}
+
+.stepper {
+  margin:
+    2px 10px
+    16px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+}
+
+.step {
+  text-align: center;
+
+  color: #8ca0bc;
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+
+  margin: auto;
+
+  border:
+    2px solid
+    #d7e5f2;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  color: #7290b6;
+
+  background: white;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.step.active {
+  color: #0d65d4;
+}
+
+.step.active .step-number {
+  border-color: #1977ed;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      145deg,
+      #3b9aff,
+      #0869e8
+    );
+}
+
+.step small {
+  display: block;
+
+  margin-top: 5px;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.form-card {
+  padding: 17px;
+
+  border:
+    1px solid
+    #dfebf5;
+
+  border-radius: 24px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.93
+    );
+
+  box-shadow:
+    0 15px 38px
+    rgba(
+      52,
+      105,
+      154,
+      0.09
+    );
+}
+
+/* =========================================================
+   PHOTO UPLOAD
+========================================================= */
+
+.photo-upload {
+  min-height: 112px;
+
+  margin-bottom: 18px;
+
+  padding: 14px;
+
+  position: relative;
+
+  overflow: hidden;
+
+  border:
+    1.5px dashed
+    #9fc8eb;
+
+  border-radius: 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fbfdff,
+      #f0f8ff
+    );
+
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.photo-upload:active {
+  transform:
+    scale(0.99);
+}
+
+.photo-upload:hover {
+  border-color:
+    #438fe1;
+
+  box-shadow:
+    0 8px 22px
+    rgba(
+      33,
+      126,
+      225,
+      0.1
+    );
+}
+
+.photo-input {
+  display: none;
+}
+
+.camera-icon {
+  margin-bottom: 6px;
+
+  color: #0871df;
+
+  font-size: 27px;
+}
+
+.photo-upload strong {
+  color: #112e5c;
+
   font-size: 12px;
 }
 
-.record-actions {
+.photo-upload > span {
+  margin-top: 2px;
+
+  color: #0e72df;
+
+  font-size: 9px;
+}
+
+.photo-upload > p {
+  margin:
+    4px 0 0;
+
+  color: #8395ad;
+
+  font-size: 8px;
+}
+
+.photo-upload.has-photo {
+  height: 200px;
+
+  padding: 0;
+
+  border-style: solid;
+
+  border-color:
+    #b9d8f5;
+
+  background:
+    #eaf5ff;
+}
+
+.photo-preview {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+}
+
+.photo-overlay {
+  position: absolute;
+
+  left: 50%;
+  bottom: 12px;
+
+  transform:
+    translateX(-50%);
+
+  padding:
+    8px 13px;
+
+  border-radius: 999px;
+
   display: flex;
-  gap: 8px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.1
-  );
-}
+  align-items: center;
 
-.record-actions button {
-  min-height: 38px;
-  padding: 0 14px;
-  border-radius: 11px;
-  font-size: 11px;
-  font-weight: 900;
-  cursor: pointer;
-}
+  gap: 6px;
 
-.claim-button {
-  border: 1px solid rgba(
-    34,
-    197,
-    94,
-    0.25
-  );
-  background: rgba(
-    34,
-    197,
-    94,
-    0.12
-  );
-  color: #86efac;
-}
-
-.unclaim-button {
-  border: 1px solid rgba(
-    245,
-    158,
-    11,
-    0.22
-  );
-  background: rgba(
-    245,
-    158,
-    11,
-    0.1
-  );
-  color: #fcd34d;
-}
-
-.edit-button {
-  border: 1px solid rgba(
-    59,
-    130,
-    246,
-    0.25
-  );
-  background: rgba(
-    37,
-    99,
-    235,
-    0.11
-  );
-  color: #93c5fd;
-}
-
-.delete-button {
-  border: 1px solid rgba(
-    239,
-    68,
-    68,
-    0.23
-  );
-  background: rgba(
-    239,
-    68,
-    68,
-    0.1
-  );
-  color: #fda4af;
-}
-
-.secondary-action {
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: 12px;
-  background: #2563eb;
   color: white;
+
+  background:
+    rgba(
+      12,
+      43,
+      80,
+      0.8
+    );
+
+  backdrop-filter:
+    blur(10px);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+.photo-overlay ion-icon {
+  font-size: 15px;
+}
+
+.remove-photo-button {
+  margin:
+    -8px auto
+    18px;
+
+  padding:
+    8px 12px;
+
+  border: 0;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  color: #d83d4f;
+
+  background: #fff0f2;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   FORM TITLE
+========================================================= */
+
+.form-title {
+  margin-bottom: 17px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+}
+
+.form-title-icon {
+  width: 33px;
+  height: 33px;
+
+  flex-shrink: 0;
+
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  color: #1674dd;
+
+  background: #e3f2ff;
+}
+
+.form-title h2 {
+  margin: 0;
+
+  color: #102d5c;
+
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.form-title p {
+  margin:
+    2px 0 0;
+
+  color: #8394ac;
+
+  font-size: 8px;
+}
+
+/* =========================================================
+   FORM FIELDS
+========================================================= */
+
+.field {
+  margin-bottom: 16px;
+
+  position: relative;
+}
+
+.field label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #17345e;
+
+  font-size: 10px;
   font-weight: 850;
 }
 
-/* ==================================
-   BOTTOM NAV
-================================== */
-
-.bottom-navigation {
-  position: fixed;
-  z-index: 1000;
-  left: 50%;
-  bottom: 14px;
-  display: grid;
-  width: min(
-    460px,
-    calc(100% - 26px)
-  );
-  min-height: 72px;
-  grid-template-columns:
-    1fr 86px 1fr;
-  align-items: center;
-  transform: translateX(-50%);
-  border: 1px solid rgba(
-    148,
-    163,
-    184,
-    0.18
-  );
-  border-radius: 24px;
-  background: rgba(
-    10,
-    23,
-    40,
-    0.95
-  );
-  box-shadow:
-    0 18px 45px
-    rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(20px);
+.field label span {
+  color: #e1394e;
 }
 
-.nav-item {
+.field ion-input,
+.field ion-textarea {
+  --background: #fbfdff;
+  --color: #18345d;
+
+  --placeholder-color:
+    #8da0ba;
+
+  --border-color:
+    #cfdeec;
+
+  --border-radius:
+    12px;
+
+  --highlight-color-focused:
+    #2181ed;
+
+  --padding-start:
+    13px;
+
+  --padding-end:
+    13px;
+
+  font-size: 11px;
+}
+
+.field ion-input {
+  min-height: 47px;
+}
+
+.field ion-textarea {
+  min-height: 90px;
+}
+
+.character-count {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #879ab3;
+
+  font-size: 8px;
+
+  text-align: right;
+}
+
+/* =========================================================
+   CHOICES
+========================================================= */
+
+.choice-grid {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 8px;
+}
+
+.choice-card {
+  min-height: 88px;
+
+  padding: 12px;
+
+  border:
+    1.5px solid
+    #e1ebf3;
+
+  border-radius: 14px;
+
   display: flex;
-  min-height: 62px;
   flex-direction: column;
+
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  border: 0;
-  background: transparent;
-  color: #71829a;
-  font-size: 10px;
-  font-weight: 800;
-  cursor: pointer;
+
+  color: #29486f;
+
+  background: #fbfdff;
 }
 
-.nav-icon {
+.choice-card ion-icon {
+  margin-bottom: 5px;
+
   font-size: 23px;
-  line-height: 1;
 }
 
-.nav-item.active {
-  color: #3b82f6;
+.choice-card strong {
+  font-size: 12px;
 }
 
-.nav-add {
-  display: grid;
-  width: 62px;
-  height: 62px;
-  place-items: center;
-  justify-self: center;
-  transform: translateY(-17px);
-  border: 5px solid #07111f;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #2580ff,
-    #3154ee
-  );
+.choice-card small {
+  margin-top: 2px;
+
+  color: #7588a4;
+
+  font-size: 8px;
+}
+
+.lost-selected {
+  border-color: #ff9fa9;
+
+  color: #d82740;
+
+  background: #fff1f3;
+}
+
+.found-selected {
+  border-color: #72b9f7;
+
+  color: #0c68ca;
+
+  background: #ebf6ff;
+}
+
+.status-choice {
+  min-height: 70px;
+
+  padding: 9px;
+
+  border:
+    1.5px solid
+    #e1ebf3;
+
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #29486f;
+
+  background: #fbfdff;
+
+  text-align: left;
+}
+
+.status-choice ion-icon {
+  flex-shrink: 0;
+
+  font-size: 19px;
+}
+
+.status-choice div {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-choice strong {
+  font-size: 9px;
+}
+
+.status-choice small {
+  margin-top: 2px;
+
+  color: #7b8da7;
+
+  font-size: 7px;
+}
+
+.unclaimed-selected {
+  border-color: #efbd35;
+
+  color: #946500;
+
+  background: #fff9e7;
+}
+
+.claimed-selected {
+  border-color: #48cdb4;
+
+  color: #087767;
+
+  background: #edfcf8;
+}
+
+/* =========================================================
+   CUSTOM INPUT
+========================================================= */
+
+.custom-input {
+  min-height: 49px;
+
+  padding:
+    0 12px;
+
+  border:
+    1px solid
+    #cfdeec;
+
+  border-radius: 13px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  background: #fbfdff;
+}
+
+.custom-input > ion-icon {
+  flex-shrink: 0;
+
+  color: #5d789c;
+
+  font-size: 17px;
+}
+
+.custom-input ion-input {
+  --border-width: 0;
+  --border-color: transparent;
+  --background: transparent;
+
+  min-height: 45px;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primary-button,
+.secondary-button {
+  min-height: 50px;
+
+  padding:
+    0 17px;
+
+  border: 0;
+
+  border-radius: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.primary-button {
+  width: 100%;
+
   color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      #3a94f8,
+      #0764e7
+    );
+
   box-shadow:
-    0 10px 25px
-    rgba(37, 99, 235, 0.4);
-  cursor: pointer;
+    0 10px 24px
+    rgba(
+      20,
+      107,
+      227,
+      0.2
+    );
 }
 
-.nav-add span {
-  font-size: 34px;
-  font-weight: 300;
-  line-height: 1;
+.secondary-button {
+  color: #315379;
+
+  background: #eef5fb;
 }
 
-.nav-add.active {
-  background: linear-gradient(
-    135deg,
-    #7c3aed,
-    #2563eb
-  );
+.navigation-buttons {
+  margin-top: 8px;
+
+  display: grid;
+
+  grid-template-columns:
+    0.7fr 1.3fr;
+
+  gap: 8px;
 }
 
-/* ==================================
-   RESPONSIVE
-================================== */
+/* =========================================================
+   REVIEW
+========================================================= */
 
-@media (max-width: 800px) {
-  .recent-list {
-    grid-template-columns: 1fr;
+.review-card {
+  margin-bottom: 17px;
+
+  padding: 18px;
+
+  border:
+    1px solid
+    #dce9f4;
+
+  border-radius: 19px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f9fcff,
+      #eff8ff
+    );
+}
+
+.review-photo {
+  width: 100%;
+  height: 190px;
+
+  margin-bottom: 14px;
+
+  border-radius: 16px;
+
+  object-fit: cover;
+}
+
+.review-placeholder {
+  width: 64px;
+  height: 64px;
+
+  margin:
+    0 auto
+    10px;
+
+  border-radius: 19px;
+
+  display: grid;
+  place-items: center;
+
+  color: #1974db;
+
+  background: #dfefff;
+}
+
+.review-placeholder ion-icon {
+  font-size: 30px;
+}
+
+.review-card h2 {
+  margin: 0;
+
+  color: #102d5a;
+
+  font-size: 19px;
+}
+
+.review-badges {
+  margin: 9px 0;
+
+  display: flex;
+  justify-content: center;
+
+  gap: 6px;
+}
+
+.review-card > p {
+  color: #637a99;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+}
+
+.review-information {
+  padding-top: 11px;
+
+  border-top:
+    1px solid
+    #dae7f2;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  color: #526f94;
+
+  font-size: 9px;
+}
+
+.review-information span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+}
+
+/* =========================================================
+   RECORDS
+========================================================= */
+
+.records-search {
+  width: 100%;
+
+  margin-bottom: 12px;
+}
+
+.filter-chips {
+  display: flex;
+
+  gap: 6px;
+
+  overflow-x: auto;
+
+  padding-bottom: 6px;
+
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chips button {
+  min-height: 34px;
+
+  flex-shrink: 0;
+
+  padding:
+    0 15px;
+
+  border:
+    1px solid
+    #dce8f3;
+
+  border-radius: 12px;
+
+  color: #315078;
+
+  background: white;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.filter-chips button.active {
+  border-color: #1474e6;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      145deg,
+      #318cf5,
+      #0966e6
+    );
+}
+
+.records-header p {
+  margin:
+    2px 0 0;
+
+  color: #8496ae;
+
+  font-size: 8px;
+}
+
+.refresh-button {
+  width: 37px;
+  height: 37px;
+
+  border:
+    1px solid
+    #d9e6f2;
+
+  border-radius: 11px;
+
+  display: grid;
+  place-items: center;
+
+  color: #176fd2;
+
+  background: white;
+}
+
+.record-card {
+  position: relative;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    #e1ebf4;
+
+  border-radius: 18px;
+
+  display: grid;
+
+  grid-template-columns:
+    58px
+    minmax(0, 1fr)
+    auto
+    30px;
+
+  gap: 9px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.94
+    );
+}
+
+.record-thumbnail {
+  width: 58px;
+  height: 58px;
+}
+
+.record-main {
+  min-width: 0;
+}
+
+.record-main h3 {
+  overflow: hidden;
+
+  margin:
+    2px 0
+    5px;
+
+  color: #102d59;
+
+  font-size: 12px;
+  font-weight: 900;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.record-main span {
+  margin-top: 2px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 3px;
+
+  color: #627a9b;
+
+  font-size: 8px;
+}
+
+.record-main p {
+  overflow: hidden;
+
+  margin:
+    6px 0 0;
+
+  color: #7a8ca5;
+
+  font-size: 8px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.record-badges {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.menu-wrapper {
+  position: relative;
+}
+
+.menu-button {
+  width: 30px;
+  height: 35px;
+
+  border:
+    1px solid
+    #e5edf5;
+
+  border-radius: 10px;
+
+  display: grid;
+  place-items: center;
+
+  color: #426186;
+
+  background: white;
+}
+
+.item-menu {
+  min-width: 120px;
+
+  position: absolute;
+
+  z-index: 50;
+
+  top: 39px;
+  right: 0;
+
+  padding: 5px;
+
+  border:
+    1px solid
+    #dfe9f2;
+
+  border-radius: 12px;
+
+  background: white;
+
+  box-shadow:
+    0 14px 32px
+    rgba(
+      35,
+      70,
+      105,
+      0.17
+    );
+}
+
+.item-menu button {
+  width: 100%;
+
+  padding: 9px;
+
+  border: 0;
+
+  border-radius: 8px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  color: #365577;
+
+  background: transparent;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  text-align: left;
+}
+
+.item-menu .delete-option {
+  color: #d83d4f;
+}
+
+/* =========================================================
+   BOTTOM NAVIGATION
+========================================================= */
+
+.bottom-nav {
+  width:
+    min(
+      100%,
+      720px
+    );
+
+  height:
+    calc(
+      76px +
+      env(
+        safe-area-inset-bottom
+      )
+    );
+
+  position: fixed;
+
+  z-index: 1000;
+
+  left: 50%;
+  bottom: 0;
+
+  transform:
+    translateX(-50%);
+
+  padding:
+    8px
+    34px
+    calc(
+      7px +
+      env(
+        safe-area-inset-bottom
+      )
+    );
+
+  border:
+    1px solid
+    rgba(
+      216,
+      230,
+      242,
+      0.9
+    );
+
+  border-bottom: 0;
+
+  border-radius:
+    24px
+    24px
+    0
+    0;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    80px
+    1fr;
+
+  align-items: center;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.95
+    );
+
+  backdrop-filter:
+    blur(22px);
+
+  box-shadow:
+    0 -8px 28px
+    rgba(
+      44,
+      87,
+      128,
+      0.09
+    );
+}
+
+.nav-button {
+  height: 54px;
+
+  border: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  color: #557394;
+
+  background: transparent;
+}
+
+.nav-button ion-icon {
+  font-size: 22px;
+}
+
+.nav-button span {
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.nav-button.active {
+  color: #086be5;
+}
+
+.add-button {
+  width: 61px;
+  height: 61px;
+
+  margin:
+    -33px auto
+    0;
+
+  border:
+    6px solid
+    #edf7ff;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      145deg,
+      #3594fa,
+      #0865e7
+    );
+
+  box-shadow:
+    0 10px 24px
+    rgba(
+      20,
+      106,
+      226,
+      0.27
+    );
+}
+
+.add-button ion-icon {
+  font-size: 30px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 480px) {
+  .header-content {
+    width:
+      calc(
+        100% - 20px
+      );
   }
 
-  .stats-grid {
-    grid-template-columns:
-      1fr 1fr;
+  .brand-logo {
+    width: 41px;
+    height: 41px;
   }
-}
 
-@media (max-width: 600px) {
-  ion-toolbar {
-    min-height: 58px;
+  .brand h1,
+  .form-header h1 {
+    font-size: 16px;
   }
 
   .app-container {
-    width: calc(100% - 24px);
-    padding-top: 20px;
-  }
+    width:
+      calc(
+        100% - 18px
+      );
 
-  .welcome-mark {
-    width: 58px;
-    height: 58px;
-    border-radius: 18px;
-    font-size: 29px;
-  }
-
-  .welcome-row h1 {
-    font-size: 31px;
-  }
-
-  .welcome-text {
-    font-size: 13px;
+    padding-top: 9px;
   }
 
   .hero-card {
-    padding: 23px;
-    border-radius: 22px;
+    min-height: 305px;
+
+    padding:
+      24px
+      17px
+      85px;
+
+    border-radius: 24px;
   }
 
-  .hero-card h2 {
-    font-size: 26px;
+  .hero-content {
+    width: 68%;
   }
 
-  .hero-card p {
-    font-size: 13px;
+  .hero-content h2 {
+    font-size: 24px;
   }
 
-  .hero-button {
-    width: 100%;
-    justify-content: center;
+  .hero-content p {
+    font-size: 10px;
   }
 
-  .stat-box {
-    min-height: 88px;
-    padding: 13px;
-    border-radius: 17px;
+  .hero-visual {
+    right: 0;
+
+    transform:
+      scale(0.86);
+
+    transform-origin:
+      bottom right;
   }
 
-  .stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+  .quick-actions {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
   }
 
-  .stat-box strong {
-    font-size: 22px;
+  .quick-card {
+    min-height: 65px;
+
+    padding: 7px;
   }
 
-  .section-heading h2 {
-    font-size: 18px;
+  .quick-icon {
+    width: 38px;
+    height: 38px;
   }
 
-  .form-card {
-    padding: 18px;
-    border-radius: 20px;
+  .stats-grid {
+    gap: 5px;
   }
 
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .screen-title h1,
-  .records-title h1 {
-    font-size: 27px;
+  .stat-card {
+    padding:
+      10px 5px;
   }
 
   .record-card {
-    padding: 15px;
-  }
-
-  .record-heading {
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .record-actions {
-    display: grid;
     grid-template-columns:
-      1fr 1fr;
+      53px
+      minmax(0, 1fr)
+      29px;
   }
 
-  .record-actions button:first-child {
-    grid-column: 1 / -1;
+  .record-thumbnail {
+    width: 53px;
+    height: 53px;
+  }
+
+  .record-badges {
+    grid-column: 2;
+
+    flex-direction: row;
+  }
+
+  .menu-wrapper {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .bottom-nav {
+    padding-left: 25px;
+    padding-right: 25px;
   }
 }
 
-@media (max-width: 380px) {
-  .app-container {
-    width: calc(100% - 18px);
+/* =========================================================
+   VERY SMALL PHONE
+========================================================= */
+
+@media (max-width: 350px) {
+  .hero-content h2 {
+    font-size: 21px;
   }
 
-  .welcome-mark {
+  .hero-visual {
+    transform:
+      scale(0.72);
+
+    opacity: 0.85;
+  }
+
+  .quick-card small {
     display: none;
   }
 
   .stats-grid {
-    gap: 8px;
-  }
-
-  .stat-box {
-    gap: 9px;
-    padding: 10px;
-  }
-
-  .stat-icon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .record-main {
     grid-template-columns:
-      44px minmax(0, 1fr);
-    gap: 11px;
+      repeat(2, 1fr);
   }
 
-  .record-symbol {
-    width: 44px;
-    height: 44px;
-    border-radius: 13px;
+  .choice-grid {
+    grid-template-columns:
+      1fr;
   }
 }
 </style>
