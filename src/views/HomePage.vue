@@ -362,7 +362,14 @@
                     : 'found-thumbnail'
                 "
               >
+                <img
+                  v-if="item.photoData"
+                  :src="item.photoData"
+                  class="saved-item-photo"
+                  :alt="item.itemName"
+                />
                 <ion-icon
+                  v-else
                   :icon="getItemIcon(item.itemName)"
                 ></ion-icon>
               </div>
@@ -481,7 +488,7 @@
                   </span>
 
                   <p>
-                    JPG, PNG or other image formats • Max 5 MB
+                    JPG, PNG or other image formats • Max 10 MB
                   </p>
                 </template>
 
@@ -696,6 +703,7 @@
                   <ion-input
                     v-model="form.date"
                     type="date"
+                    :max="todayDate"
                   ></ion-input>
                 </div>
               </div>
@@ -929,7 +937,14 @@
                     : 'found-thumbnail'
                 "
               >
+                <img
+                  v-if="item.photoData"
+                  :src="item.photoData"
+                  class="saved-item-photo"
+                  :alt="item.itemName"
+                />
                 <ion-icon
+                  v-else
                   :icon="getItemIcon(item.itemName)"
                 ></ion-icon>
               </div>
@@ -1150,12 +1165,15 @@ interface LostFoundItem {
   date: string;
   type: 'Lost' | 'Found';
   status: 'Unclaimed' | 'Claimed';
+  photoData?: string;
 }
 
 type Screen =
   | 'home'
   | 'form'
   | 'records';
+
+const todayDate = new Date().toLocaleDateString('en-CA');
 
 /* =========================================================
    APP STATE
@@ -1343,62 +1361,58 @@ const clearPhotoPreviewUrl = () => {
   }
 };
 
-const handlePhotoSelected = (
-  event: Event
-) => {
-  const input =
-    event.target as HTMLInputElement;
+const compressImageToDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Unable to read image.'));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('Unable to load image.'));
+      image.onload = () => {
+        const maxSide = 720;
+        let width = image.width;
+        let height = image.height;
+        if (width > maxSide || height > maxSide) {
+          const scale = Math.min(maxSide / width, maxSide / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        if (!context) return reject(new Error('Canvas is unavailable.'));
+        context.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.68));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
-  if (
-    !input.files ||
-    input.files.length === 0
-  ) {
-    return;
-  }
-
-  const file =
-    input.files[0];
-
-  /* IMAGE ONLY */
-  if (
-    !file.type.startsWith('image/')
-  ) {
-    showToast(
-      'Please select an image file.'
-    );
-
+const handlePhotoSelected = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0) return;
+  const file = input.files[0];
+  if (!file.type.startsWith('image/')) {
+    showToast('Please select an image file.');
     input.value = '';
-
     return;
   }
-
-  /* MAX 5 MB */
-  const maximumSize =
-    5 * 1024 * 1024;
-
-  if (
-    file.size > maximumSize
-  ) {
-    showToast(
-      'Photo must be smaller than 5 MB.'
-    );
-
+  if (file.size > 10 * 1024 * 1024) {
+    showToast('Photo must be smaller than 10 MB.');
     input.value = '';
-
     return;
   }
-
-  clearPhotoPreviewUrl();
-
-  selectedPhoto.value =
-    file;
-
-  photoPreview.value =
-    URL.createObjectURL(file);
-
-  showToast(
-    'Photo selected successfully.'
-  );
+  try {
+    selectedPhoto.value = file;
+    photoPreview.value = await compressImageToDataUrl(file);
+    showToast('Photo selected successfully.');
+  } catch (error) {
+    console.error(error);
+    showToast('Unable to process the photo.');
+  }
 };
 
 const removePhoto = () => {
@@ -1604,7 +1618,10 @@ const saveItem = async () => {
         form.type,
 
       status:
-        form.status
+        form.status,
+
+      photoData:
+        photoPreview.value || ''
     };
 
     /* UPDATE */
@@ -1736,7 +1753,10 @@ const loadItems = async () => {
               data.type ?? 'Lost',
 
             status:
-              data.status ?? 'Unclaimed'
+              data.status ?? 'Unclaimed',
+
+            photoData:
+              data.photoData ?? ''
           };
         }
       );
@@ -1782,7 +1802,10 @@ const loadItems = async () => {
                 data.type ?? 'Lost',
 
               status:
-                data.status ?? 'Unclaimed'
+                data.status ?? 'Unclaimed',
+
+              photoData:
+                data.photoData ?? ''
             };
           }
         );
@@ -1842,6 +1865,8 @@ const editItem = (
     '';
 
   removePhoto();
+
+  photoPreview.value = item.photoData ?? '';
 
   activeScreen.value =
     'form';
@@ -4860,6 +4885,74 @@ ion-toolbar {
   .quick-card strong { font-size:12px; }
   .quick-card small { display:block; font-size:9px; }
   .record-filter-panel { top:74px; right:10px; width:calc(100vw - 20px); }
+}
+
+/* =========================================================
+   FINAL PHONE READABILITY + SAVED PHOTOS
+========================================================= */
+.saved-item-photo {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.item-thumbnail:has(.saved-item-photo),
+.record-thumbnail:has(.saved-item-photo) {
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Larger text for actual Android screens */
+.brand h1, .form-header h1 { font-size: 21px; }
+.brand p, .form-header p { font-size: 14px; }
+.hero-eyebrow { font-size: 11px; }
+.hero-content h2 { font-size: 30px; }
+.hero-content p { font-size: 15px; line-height: 1.5; }
+.quick-card strong { font-size: 15px; }
+.quick-card small { font-size: 12px; }
+.search-box input, .records-search input { font-size: 15px; }
+.stat-card strong { font-size: 20px; }
+.stat-card small { font-size: 12px; }
+.section-header h2, .records-header h2 { font-size: 20px; }
+.section-header button { font-size: 13px; }
+.recent-title h3 { font-size: 15px; }
+.meta-information span { font-size: 12px; }
+.badge { font-size: 11px; padding: 6px 10px; }
+.records-header p { font-size: 12px; }
+.filter-chips button { font-size: 13px; }
+.record-main h3 { font-size: 16px; }
+.record-main span { font-size: 12px; }
+.record-main p { font-size: 12px; line-height: 1.4; }
+.step small { font-size: 11px; }
+.photo-upload strong { font-size: 16px; }
+.photo-upload > span { font-size: 13px; }
+.photo-upload > p { font-size: 11px; }
+.form-title h2 { font-size: 19px; }
+.form-title p { font-size: 12px; }
+.field label { font-size: 14px; }
+.field ion-input, .field ion-textarea { font-size: 15px; }
+.character-count { font-size: 11px; }
+.choice-card strong { font-size: 15px; }
+.choice-card small { font-size: 12px; }
+.status-choice strong { font-size: 13px; }
+.status-choice small { font-size: 11px; }
+.primary-button, .secondary-button { font-size: 14px; }
+.review-card h2 { font-size: 21px; }
+.review-card > p { font-size: 13px; }
+.review-information { font-size: 12px; }
+.nav-button span { font-size: 10px; }
+.notification-copy strong { font-size: 14px; }
+.notification-copy > span { font-size: 12px; }
+.notification-copy small { font-size: 11px; }
+
+@media (max-width: 480px) {
+  .brand h1, .form-header h1 { font-size: 20px; }
+  .brand p, .form-header p { font-size: 13px; }
+  .hero-content h2 { font-size: 29px; }
+  .hero-content p { font-size: 14px; }
+  .quick-card strong { font-size: 14px; }
+  .quick-card small { font-size: 11px; }
 }
 
 </style>
